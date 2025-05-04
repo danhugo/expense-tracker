@@ -72,5 +72,5 @@ Even for personal use:
 - Language: Python (FastAPI)
 - Database: SQLite
 ## 3. Deployment
--  Render, Railway, Vercel (frontend), or Heroku (free tier) 
+-  Render, Railway, Vercel (frontend), or Heroku (free tier)
 
