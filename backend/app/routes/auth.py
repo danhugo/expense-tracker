@@ -47,8 +47,8 @@ def verify_email(token: str, db: Session = Depends(database.get_db)):
     return {"msg": "Email verified successfully. You can now log in."}
 
 @router.post("/resend-verification")
-async def resend_verification(email: str, db: Session = Depends(database.get_db)):
-    user = db.query(models.User).filter_by(email=email).first()
+async def resend_verification(request: schemas.EmailVerification, db: Session = Depends(database.get_db)):
+    user = db.query(models.User).filter_by(email=request.email).first()
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
     if user.is_verified:

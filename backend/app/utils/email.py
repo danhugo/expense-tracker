@@ -7,7 +7,7 @@ async def send_verification_email(to_email: str, token: str):
     message["From"] = "no-reply@expensetracker.hice"
     message["To"] = to_email
     message["Subject"] = "Verify your email"
-    message.set_content(f"Click to verify: http://localhost:8000/verify-email?token={token}")
+    message.set_content(f"Click to verify: http://localhost:8000/auth/verify-email?token={token}")
     
     await send(
         message,
