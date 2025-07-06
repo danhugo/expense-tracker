@@ -1,5 +1,6 @@
 from pydantic import BaseModel, EmailStr, field_validator
 import re
+# from datetime import date
 class UserRegister(BaseModel):
     email: EmailStr
     username: str
@@ -25,3 +26,38 @@ class UserLogin(BaseModel):
 class EmailVerification(BaseModel):
     email: EmailStr
 
+# class ExpenseCreate(BaseModel):
+#     amount: float
+#     date: date
+#     category: str
+#     description: str = ""
+
+# class IncomeCreate(BaseModel):
+#     amount: float
+#     date: date
+#     source: str
+
+# class BudgetCreate(BaseModel):
+#     category: str
+#     amount: float
+
+# class BudgetStatus(BaseModel):
+#     category: str
+#     budget: float
+#     spent: float
+#     remaining: float
+
+# class ReportSummary(BaseModel):
+#     total_expense: float
+#     total_income: float
+#     net_savings: float
+
+# class DailySummary(BaseModel):
+#     date: date
+#     total_expense: float
+#     total_income: float
+#     net_savings: float
+
+# class Token(BaseModel):
+#     access_token: str
+#     token_type: str
