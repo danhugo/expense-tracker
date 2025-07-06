@@ -18,8 +18,8 @@ const App = () => (
       <BrowserRouter>
         <Routes>
           <Route path="/login" element={<Login />} />
-          <Route path="/*" element={<Index />} />
           <Route path="/404" element={<NotFound />} />
+          <Route path="/*" element={<Index />} />
         </Routes>
       </BrowserRouter>
     </TooltipProvider>

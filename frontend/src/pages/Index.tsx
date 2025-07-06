@@ -1,6 +1,7 @@
 
 import { useState } from 'react';
 import { Routes, Route } from 'react-router-dom';
+import { Plus } from 'lucide-react';
 import Sidebar from '../components/Sidebar';
 import TransactionModal from '../components/TransactionModal';
 import FloatingActionButton from '../components/FloatingActionButton';
