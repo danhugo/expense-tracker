@@ -23,11 +23,11 @@ const Dashboard = ({ onEditTransaction, onDeleteTransaction, onAddTransaction }:
   return (
     <div className="space-y-4">
       {/* Dashboard Header with Gradient Background */}
-      <div className="bg-gradient-to-r from-primary-green to-accent-yellow p-6 rounded-lg shadow-sm">
-        <div className="flex items-center justify-between mb-4">
+      <div className="bg-gradient-to-r from-primary-green to-accent-yellow p-6 rounded-lg text-white">
+        <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-2xl lg:text-3xl font-bold text-white mb-2">Dashboard</h1>
-            <p className="text-white/90">Your financial overview at a glance</p>
+            <h2 className="text-3xl font-bold">Dashboard</h2>
+            <p className="mt-1 opacity-90">Your financial overview at a glance</p>
           </div>
           <button
             onClick={onAddTransaction}
