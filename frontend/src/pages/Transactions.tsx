@@ -1,5 +1,6 @@
 
 import { useState } from 'react';
+import { Plus } from 'lucide-react';
 import TransactionTable from '../components/TransactionTable';
 import { useTransactions } from '../hooks/useTransactions';
 import { Transaction } from '../types/transaction';
@@ -7,9 +8,10 @@ import { Transaction } from '../types/transaction';
 interface TransactionsProps {
   onEditTransaction: (transaction: Transaction) => void;
   onDeleteTransaction: (id: string) => void;
+  onAddTransaction: () => void;
 }
 
-const Transactions = ({ onEditTransaction, onDeleteTransaction }: TransactionsProps) => {
+const Transactions = ({ onEditTransaction, onDeleteTransaction, onAddTransaction }: TransactionsProps) => {
   const { transactions } = useTransactions();
   const [filterType, setFilterType] = useState<'all' | 'income' | 'expense'>('all');
   const [sortBy, setSortBy] = useState<'date' | 'amount'>('date');
@@ -35,10 +37,23 @@ const Transactions = ({ onEditTransaction, onDeleteTransaction }: TransactionsPr
 
   return (
     <div className="space-y-6">
-      {/* Page Header */}
-      <div>
-        <h1 className="text-3xl font-bold text-gray-800">All Transactions</h1>
-        <p className="text-gray-600 mt-1">Manage your income and expenses</p>
+      {/* Page Header with Gradient Background */}
+      <div className="bg-gradient-to-r from-primary-green to-accent-yellow p-6 rounded-lg shadow-sm">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+          <div>
+            <h1 className="text-3xl font-bold text-white">All Transactions</h1>
+            <p className="text-white/90 mt-1">Manage your income and expenses</p>
+          </div>
+          
+          {/* Add Transaction Button - Primary action on this page */}
+          <button
+            onClick={onAddTransaction}
+            className="flex items-center px-6 py-3 bg-white/20 backdrop-blur-sm text-white font-semibold rounded-lg hover:bg-white/30 transform hover:scale-105 transition-all duration-200 shadow-lg border border-white/20 self-start sm:self-auto"
+          >
+            <Plus className="mr-2 h-5 w-5" />
+            Add New Transaction
+          </button>
+        </div>
       </div>
 
       {/* Filters and Controls */}

@@ -1,24 +1,33 @@
 
 import { useState } from 'react';
-import { Routes, Route } from 'react-router-dom';
-import { Plus } from 'lucide-react';
+import { Routes, Route, useLocation } from 'react-router-dom';
+import { Menu, MessageCircle } from 'lucide-react';
+import { NavLink } from 'react-router-dom';
 import Sidebar from '../components/Sidebar';
 import TransactionModal from '../components/TransactionModal';
 import FloatingActionButton from '../components/FloatingActionButton';
+import ChatPanel from '../components/ChatPanel';
+import UserDropdown from '../components/UserDropdown';
 import Dashboard from './Dashboard';
 import Transactions from './Transactions';
 import Settings from './Settings';
 import Budget from './Budget';
 import RecurringTransactions from './RecurringTransactions';
 import { useTransactions } from '../hooks/useTransactions';
+import { useSidebarState } from '../hooks/useSidebarState';
 import { Transaction } from '../types/transaction';
 
 const Index = () => {
-  const [sidebarOpen, setSidebarOpen] = useState(false);
   const [modalOpen, setModalOpen] = useState(false);
   const [editingTransaction, setEditingTransaction] = useState<Transaction | undefined>();
+  const [chatPanelOpen, setChatPanelOpen] = useState(false);
+  const location = useLocation();
   
   const { addTransaction, updateTransaction, deleteTransaction } = useTransactions();
+  const { isCollapsed, isMobileOpen, toggleSidebar, openMobile, closeMobile } = useSidebarState();
+
+  // Check if we're on the Dashboard page
+  const isDashboardPage = location.pathname === '/';
 
   const handleAddTransaction = () => {
     setEditingTransaction(undefined);
@@ -47,74 +56,97 @@ const Index = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 flex w-full">
+    <div className="min-h-screen bg-gray-50 flex w-full overflow-x-hidden">
       {/* Sidebar */}
       <Sidebar 
-        isOpen={sidebarOpen}
-        onClose={() => setSidebarOpen(false)}
+        isCollapsed={isCollapsed}
+        isMobileOpen={isMobileOpen}
+        onToggle={toggleSidebar}
+        onCloseMobile={closeMobile}
         onAddTransaction={handleAddTransaction}
       />
 
       {/* Main Content */}
-      <div className="flex-1 flex flex-col min-w-0">
-        {/* Enhanced Top Bar */}
-        <header className="bg-white border-b border-gray-200 px-4 py-4 lg:px-6 shadow-sm">
+      <div className={`flex-1 flex flex-col min-w-0 transition-all duration-300 ${
+        isCollapsed ? 'lg:ml-8' : 'lg:ml-50'
+      } ${chatPanelOpen ? 'lg:mr-80' : ''}`}>
+        {/* Top Header Bar */}
+        <header className="bg-white border-b border-gray-200 px-4 py-3 lg:px-6 shadow-sm">
           <div className="flex items-center justify-between">
-            <button
-              onClick={() => setSidebarOpen(true)}
-              className="lg:hidden p-2 -ml-2 text-gray-600 hover:text-primary-green hover:bg-green-50 rounded-md transition-colors"
-            >
-              <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
-              </svg>
-            </button>
-            
+            {/* Left Side - Logo & Hamburger */}
             <div className="flex items-center space-x-4">
-              <div className="flex items-center space-x-2">
-                <div className="w-2 h-2 bg-primary-green rounded-full animate-pulse"></div>
-                <span className="text-sm text-gray-600 font-medium">Welcome back!</span>
-              </div>
+              {/* HUFI Logo - Stylized Text */}
+              <NavLink to="/" className="flex items-center cursor-pointer hover:opacity-90 transition-opacity">
+                <div className="text-2xl font-bold bg-gradient-to-r from-primary-green to-green-600 bg-clip-text text-transparent">
+                  HUFI
+                </div>
+              </NavLink>
+
+              {/* Hamburger Menu */}
               <button
-                onClick={handleAddTransaction}
-                className="hidden lg:flex items-center px-6 py-2 bg-gradient-to-r from-primary-green to-green-600 text-white font-semibold rounded-md hover:from-green-600 hover:to-green-700 transform hover:scale-105 transition-all duration-200 shadow-md"
+                onClick={window.innerWidth < 1024 ? openMobile : toggleSidebar}
+                className="p-2 text-gray-600 hover:text-primary-green hover:bg-green-50 rounded-lg transition-colors"
               >
-                <Plus className="mr-2 h-4 w-4" />
-                Add Transaction
+                <Menu className="h-5 w-5" />
               </button>
+            </div>
+            
+            {/* Right Side - Chat Agent & User Dropdown */}
+            <div className="flex items-center space-x-2">
+              {/* Chat Agent Icon */}
+              <button
+                onClick={() => setChatPanelOpen(!chatPanelOpen)}
+                className="p-2 text-gray-600 hover:text-primary-green hover:bg-green-50 rounded-lg transition-colors"
+                title="Chat Assistant"
+              >
+                <MessageCircle className="h-5 w-5" />
+              </button>
+              
+              <UserDropdown />
             </div>
           </div>
         </header>
 
-        {/* Page Content */}
-        <main className="flex-1 p-4 lg:p-6 max-w-7xl mx-auto w-full bg-gray-50">
-          <Routes>
-            <Route 
-              path="/" 
-              element={
-                <Dashboard 
-                  onEditTransaction={handleEditTransaction}
-                  onDeleteTransaction={handleDeleteTransaction}
-                />
-              } 
-            />
-            <Route 
-              path="/transactions" 
-              element={
-                <Transactions 
-                  onEditTransaction={handleEditTransaction}
-                  onDeleteTransaction={handleDeleteTransaction}
-                />
-              } 
-            />
-            <Route path="/settings" element={<Settings />} />
-            <Route path="/budget" element={<Budget />} />
-            <Route path="/recurring" element={<RecurringTransactions />} />
-          </Routes>
+        {/* Page Content - Reduced padding for better space utilization */}
+        <main className={`flex-1 p-4 overflow-y-auto`}>
+          <div className="max-w-full mx-auto">
+            <Routes>
+              <Route 
+                path="/" 
+                element={
+                  <Dashboard 
+                    onEditTransaction={handleEditTransaction}
+                    onDeleteTransaction={handleDeleteTransaction}
+                    onAddTransaction={handleAddTransaction}
+                  />
+                } 
+              />
+              <Route 
+                path="/transactions" 
+                element={
+                  <Transactions 
+                    onEditTransaction={handleEditTransaction}
+                    onDeleteTransaction={handleDeleteTransaction}
+                    onAddTransaction={handleAddTransaction}
+                  />
+                } 
+              />
+              <Route path="/settings" element={<Settings />} />
+              <Route path="/budget" element={<Budget />} />
+              <Route path="/recurring" element={<RecurringTransactions />} />
+            </Routes>
+          </div>
         </main>
       </div>
 
-      {/* Enhanced Floating Action Button (Mobile) */}
-      <FloatingActionButton onClick={handleAddTransaction} />
+      {/* Chat Panel */}
+      <ChatPanel 
+        isOpen={chatPanelOpen}
+        onClose={() => setChatPanelOpen(false)}
+      />
+
+      {/* Enhanced Floating Action Button (Mobile) - Only show on Dashboard */}
+      {isDashboardPage && <FloatingActionButton onClick={handleAddTransaction} />}
 
       {/* Transaction Modal */}
       <TransactionModal

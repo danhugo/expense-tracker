@@ -55,14 +55,14 @@ const YearlyExpenseChart = ({ transactions }: YearlyExpenseChartProps) => {
   };
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <h3 className="text-xl font-bold text-gray-800 flex items-center">
-          <div className="w-3 h-3 bg-accent-yellow rounded-full mr-3"></div>
-          Yearly Expenses by Month
+    <div className="space-y-4 w-full">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+        <h3 className="text-lg font-bold text-gray-800 flex items-center">
+          <div className="w-3 h-3 bg-accent-yellow rounded-full mr-3 flex-shrink-0"></div>
+          <span>Yearly Expense Trends</span>
         </h3>
         <Select value={selectedYear} onValueChange={setSelectedYear}>
-          <SelectTrigger className="w-24 border-gray-300 focus:border-accent-yellow">
+          <SelectTrigger className="w-20 border-gray-300 focus:border-accent-yellow text-xs">
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
@@ -75,26 +75,41 @@ const YearlyExpenseChart = ({ transactions }: YearlyExpenseChartProps) => {
         </Select>
       </div>
       
-      <ChartContainer config={chartConfig} className="h-80">
-        <ResponsiveContainer width="100%" height="100%">
-          <BarChart data={chartData} margin={{ top: 20, right: 30, left: 20, bottom: 20 }}>
-            <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
-            <XAxis dataKey="month" stroke="#6b7280" />
-            <YAxis stroke="#6b7280" />
-            <ChartTooltip 
-              content={<ChartTooltipContent />}
-              formatter={(value) => [`$${value}`, 'Amount']}
-            />
-            <Bar 
-              dataKey="amount" 
-              fill="#FBBF24" 
-              radius={[6, 6, 0, 0]}
-              stroke="#F59E0B"
-              strokeWidth={1}
-            />
-          </BarChart>
-        </ResponsiveContainer>
-      </ChartContainer>
+      <div className="w-full overflow-hidden">
+        <ChartContainer config={chartConfig} className="h-64 w-full">
+          <ResponsiveContainer width="100%" height="100%">
+            <BarChart 
+              data={chartData} 
+              margin={{ top: 10, right: 10, left: 10, bottom: 20 }}
+              maxBarSize={32}
+            >
+              <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
+              <XAxis 
+                dataKey="month" 
+                stroke="#6b7280" 
+                fontSize={10}
+                tickMargin={8}
+              />
+              <YAxis 
+                stroke="#6b7280" 
+                fontSize={10}
+                tickMargin={8}
+              />
+              <ChartTooltip 
+                content={<ChartTooltipContent />}
+                formatter={(value) => [`$${value}`, 'Amount']}
+              />
+              <Bar 
+                dataKey="amount" 
+                fill="#FBBF24" 
+                radius={[4, 4, 0, 0]}
+                stroke="#F59E0B"
+                strokeWidth={1}
+              />
+            </BarChart>
+          </ResponsiveContainer>
+        </ChartContainer>
+      </div>
     </div>
   );
 };
