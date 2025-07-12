@@ -1,7 +1,6 @@
 
 import { useState } from 'react';
 import { Routes, Route, useLocation } from 'react-router-dom';
-import { Menu, MessageCircle } from 'lucide-react';
 import { NavLink } from 'react-router-dom';
 import Sidebar from '../components/Sidebar';
 import TransactionModal from '../components/TransactionModal';
@@ -57,58 +56,52 @@ const Index = () => {
 
   return (
     <div className="min-h-screen bg-gray-50 flex w-full overflow-x-hidden">
-      {/* Sidebar */}
+      {/* Fixed Sidebar */}
       <Sidebar 
         isCollapsed={isCollapsed}
         isMobileOpen={isMobileOpen}
         onToggle={toggleSidebar}
         onCloseMobile={closeMobile}
         onAddTransaction={handleAddTransaction}
+        onToggleChat={() => setChatPanelOpen(!chatPanelOpen)}
       />
 
-      {/* Main Content */}
+      {/* Main Content - Adjusted for fixed sidebar */}
       <div className={`flex-1 flex flex-col min-w-0 transition-all duration-300 ${
-        isCollapsed ? 'lg:ml-8' : 'lg:ml-50'
-      } ${chatPanelOpen ? 'lg:mr-80' : ''}`}>
+        isCollapsed ? 'lg:ml-16' : 'lg:ml-64'
+      } ml-0`}>
         {/* Top Header Bar */}
         <header className="bg-white border-b border-gray-200 px-4 py-3 lg:px-6 shadow-sm">
           <div className="flex items-center justify-between">
-            {/* Left Side - Logo & Hamburger */}
+            {/* Left Side - Mobile Hamburger & Logo */}
             <div className="flex items-center space-x-4">
+              {/* Mobile Hamburger Menu - positioned on the far left */}
+              <button
+                onClick={openMobile}
+                className="lg:hidden p-2 text-gray-600 hover:text-primary-green hover:bg-green-50 rounded-lg transition-colors"
+              >
+                <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+                </svg>
+              </button>
+
               {/* HUFI Logo - Stylized Text */}
               <NavLink to="/" className="flex items-center cursor-pointer hover:opacity-90 transition-opacity">
                 <div className="text-2xl font-bold bg-gradient-to-r from-primary-green to-green-600 bg-clip-text text-transparent">
                   HUFI
                 </div>
               </NavLink>
-
-              {/* Hamburger Menu */}
-              <button
-                onClick={window.innerWidth < 1024 ? openMobile : toggleSidebar}
-                className="p-2 text-gray-600 hover:text-primary-green hover:bg-green-50 rounded-lg transition-colors"
-              >
-                <Menu className="h-5 w-5" />
-              </button>
             </div>
             
-            {/* Right Side - Chat Agent & User Dropdown */}
-            <div className="flex items-center space-x-2">
-              {/* Chat Agent Icon */}
-              <button
-                onClick={() => setChatPanelOpen(!chatPanelOpen)}
-                className="p-2 text-gray-600 hover:text-primary-green hover:bg-green-50 rounded-lg transition-colors"
-                title="Chat Assistant"
-              >
-                <MessageCircle className="h-5 w-5" />
-              </button>
-              
+            {/* Right Side - User Dropdown only */}
+            <div className="flex items-center">
               <UserDropdown />
             </div>
           </div>
         </header>
 
-        {/* Page Content - Reduced padding for better space utilization */}
-        <main className={`flex-1 p-4 overflow-y-auto`}>
+        {/* Page Content */}
+        <main className="flex-1 p-4 overflow-y-auto">
           <div className="max-w-full mx-auto">
             <Routes>
               <Route 

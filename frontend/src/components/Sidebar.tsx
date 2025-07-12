@@ -1,6 +1,6 @@
 
 import { NavLink } from 'react-router-dom';
-import { LayoutDashboard, FileText, Settings, Calendar, CreditCard, X } from 'lucide-react';
+import { LayoutDashboard, FileText, Settings, Calendar, CreditCard, X, Menu, MessageCircle } from 'lucide-react';
 
 interface SidebarProps {
   isCollapsed: boolean;
@@ -8,9 +8,10 @@ interface SidebarProps {
   onToggle: () => void;
   onCloseMobile: () => void;
   onAddTransaction: () => void;
+  onToggleChat: () => void;
 }
 
-const Sidebar = ({ isCollapsed, isMobileOpen, onToggle, onCloseMobile }: SidebarProps) => {
+const Sidebar = ({ isCollapsed, isMobileOpen, onToggle, onCloseMobile, onToggleChat }: SidebarProps) => {
   const navigationItems = [
     { name: 'Dashboard', href: '/', icon: LayoutDashboard },
     { name: 'Transactions', href: '/transactions', icon: FileText },
@@ -36,17 +37,25 @@ const Sidebar = ({ isCollapsed, isMobileOpen, onToggle, onCloseMobile }: Sidebar
         />
       )}
       
-      {/* Sidebar */}
+      {/* Sidebar - Now truly fixed */}
       <div className={`
-        fixed lg:static inset-y-0 left-0 z-50 bg-white border-r border-gray-200
+        fixed inset-y-0 left-0 z-50 bg-white border-r border-gray-200
         transform transition-all duration-300 ease-in-out
         ${isMobileOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}
         ${isCollapsed ? 'lg:w-16' : 'lg:w-64'}
         w-64
       `}>
         <div className="flex flex-col h-full">
-          {/* Header */}
-          <div className={`border-b border-gray-200 flex items-center ${isCollapsed ? 'lg:p-3 lg:justify-center' : 'p-6'} p-6`}>
+          {/* Header - aligned with top header */}
+          <div className={`h-[73px] border-b border-gray-200 flex items-center ${isCollapsed ? 'lg:justify-center lg:px-2' : 'lg:justify-between lg:px-6'} px-6`}>
+            {/* Toggle button - always visible on desktop, positioned on sidebar */}
+            <button
+              onClick={onToggle}
+              className="hidden lg:block p-2 text-gray-600 hover:text-primary-green hover:bg-green-50 rounded-md transition-colors"
+            >
+              <Menu className="h-5 w-5" />
+            </button>
+
             {/* Close button for mobile */}
             <button
               onClick={onCloseMobile}
@@ -55,23 +64,12 @@ const Sidebar = ({ isCollapsed, isMobileOpen, onToggle, onCloseMobile }: Sidebar
               <X className="h-5 w-5" />
             </button>
 
-            {/* HUFI Logo - Stylized Text version for expanded state */}
+            {/* HUFI Logo - only show when expanded on desktop */}
             {!isCollapsed && (
               <NavLink to="/" className="lg:block hidden">
                 <div className="flex items-center space-x-3 cursor-pointer hover:opacity-90 transition-opacity">
                   <div className="text-2xl font-bold bg-gradient-to-r from-primary-green to-green-600 bg-clip-text text-transparent">
                     HUFI
-                  </div>
-                </div>
-              </NavLink>
-            )}
-
-            {/* HUFI Logo - Compact version for collapsed state */}
-            {isCollapsed && (
-              <NavLink to="/" className="lg:block hidden">
-                <div className="cursor-pointer hover:opacity-90 transition-opacity">
-                  <div className="text-lg font-bold bg-gradient-to-r from-primary-green to-green-600 bg-clip-text text-transparent">
-                    H
                   </div>
                 </div>
               </NavLink>
@@ -88,37 +86,62 @@ const Sidebar = ({ isCollapsed, isMobileOpen, onToggle, onCloseMobile }: Sidebar
           </div>
 
           {/* Navigation */}
-          <nav className={`flex-1 space-y-1 ${isCollapsed ? 'lg:p-2' : 'lg:p-4'} p-4`}>
+          <nav className={`flex-1 space-y-2 ${isCollapsed ? 'lg:p-2' : 'lg:p-4'} p-4 overflow-y-auto`}>
             {navigationItems.map((item) => (
               <div key={item.name} className="relative group">
                 <NavLink
                   to={item.href}
                   className={({ isActive }) =>
-                    `flex items-center text-sm font-medium rounded-lg transition-all duration-200 ${
+                    `flex items-center text-sm font-medium rounded-lg transition-all duration-200 w-full h-12 ${
                       isActive
                         ? 'bg-gradient-to-r from-primary-green to-green-600 text-white shadow-sm'
                         : 'text-gray-700 hover:bg-gray-100 hover:text-gray-800'
                     } ${
-                      isCollapsed ? 'lg:p-3 lg:justify-center' : 'lg:px-4 lg:py-3'
-                    } px-4 py-3`
+                      isCollapsed ? 'lg:justify-center lg:px-3' : 'lg:px-4'
+                    } px-4`
                   }
                   onClick={handleNavClick}
                 >
                   <item.icon className={`h-5 w-5 flex-shrink-0 ${isCollapsed ? '' : 'lg:mr-3'} mr-3`} />
-                  <span className={`${isCollapsed ? 'lg:hidden' : 'lg:block'} block`}>
+                  <span className={`${isCollapsed ? 'lg:hidden' : 'lg:block'} block truncate`}>
                     {item.name}
                   </span>
                 </NavLink>
                 
                 {/* Tooltip for collapsed state */}
                 {isCollapsed && (
-                  <div className="hidden lg:block absolute left-full top-1/2 transform -translate-y-1/2 ml-2 px-2 py-1 bg-gray-800 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap z-50">
+                  <div className="hidden lg:block absolute left-full top-1/2 transform -translate-y-1/2 ml-2 px-2 py-1 bg-gray-800 text-white text-xs rounded-md opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap z-50">
                     {item.name}
                   </div>
                 )}
               </div>
             ))}
           </nav>
+
+          {/* Chat Agent Icon - positioned at the bottom */}
+          <div className={`border-t border-gray-200 ${isCollapsed ? 'lg:p-2' : 'lg:p-4'} p-4`}>
+            <div className="relative group">
+              <button
+                onClick={onToggleChat}
+                className={`w-full flex items-center text-sm font-medium rounded-lg transition-all duration-200 text-gray-700 hover:bg-gray-100 hover:text-gray-800 h-12 ${
+                  isCollapsed ? 'lg:justify-center lg:px-3' : 'lg:px-4'
+                } px-4`}
+                title="Chat Assistant"
+              >
+                <MessageCircle className={`h-5 w-5 flex-shrink-0 ${isCollapsed ? '' : 'lg:mr-3'} mr-3`} />
+                <span className={`${isCollapsed ? 'lg:hidden' : 'lg:block'} block truncate`}>
+                  Chat Assistant
+                </span>
+              </button>
+              
+              {/* Tooltip for collapsed state */}
+              {isCollapsed && (
+                <div className="hidden lg:block absolute left-full top-1/2 transform -translate-y-1/2 ml-2 px-2 py-1 bg-gray-800 text-white text-xs rounded-md opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap z-50">
+                  Chat Assistant
+                </div>
+              )}
+            </div>
+          </div>
         </div>
       </div>
     </>

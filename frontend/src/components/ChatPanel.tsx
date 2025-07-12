@@ -84,7 +84,7 @@ const ChatPanel = ({ isOpen, onClose }: ChatPanelProps) => {
   if (!isOpen) return null;
 
   return (
-    <div className="fixed right-0 top-0 h-full w-80 bg-white shadow-2xl border-l border-gray-200 z-50 flex flex-col">
+    <div className="fixed left-0 top-0 h-full w-80 bg-white shadow-2xl border-r border-gray-200 z-50 flex flex-col">
       {/* Header */}
       <div className="flex items-center justify-between p-4 border-b bg-gradient-to-r from-primary-green to-green-600 text-white">
         <div className="flex items-center space-x-3">
