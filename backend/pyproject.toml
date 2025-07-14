@@ -1,0 +1,10 @@
+[project]
+name = "backend"
+version = "0.1.0"
+dependencies = [
+    "Flask",
+    "Flask-SQLAlchemy",
+    "Flask-Migrate",
+    "Flask-Cors",
+    "psycopg2-binary",
+]
