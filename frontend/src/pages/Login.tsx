@@ -1,6 +1,9 @@
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+
+declare const google: typeof window.google;
 import { useNavigate, Link } from 'react-router-dom';
+import { useUser } from '../contexts/UserContext';
 import { Button } from '../components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../components/ui/card';
 import { Input } from '../components/ui/input';
@@ -14,30 +17,104 @@ const Login = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [isGoogleLoading, setIsGoogleLoading] = useState(false);
+  const [errorMessage, setErrorMessage] = useState('');
   const navigate = useNavigate();
+  const { setUser } = useUser();
 
-  const handleLogin = async (e: React.FormEvent) => {
+  const handleLogin = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setIsLoading(true);
-    
-    // Simulate login process
-    setTimeout(() => {
-      setIsLoading(false);
-      // For now, just navigate to dashboard
+    try {
+      const res = await fetch('http://localhost:8060/login', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ email, password }),
+      });
+
+      if (!res.ok) {
+        const errorData = await res.json();
+        throw new Error(errorData.detail || 'Login failed');
+      }
+
+      const data = await res.json();
+      localStorage.setItem('token', data.access_token);
+
+      // Fetch user data after successful login
+      const userRes = await fetch('http://localhost:8060/users/me', {
+        headers: {
+          'Authorization': `Bearer ${data.access_token}`,
+        },
+      });
+      if (userRes.ok) {
+        const userData = await userRes.json();
+        setUser(userData);
+      } else {
+        console.error('Failed to fetch user data');
+      }
       navigate('/');
-    }, 1000);
+    } catch (error: unknown) {
+      console.error('Login error:', (error as Error).message);
+      setErrorMessage((error as Error).message);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
-  const handleGoogleLogin = async () => {
+  const handleGoogleLogin = async (response: unknown) => {
     setIsGoogleLoading(true);
-    
-    // Simulate Google OAuth process
-    setTimeout(() => {
-      setIsGoogleLoading(false);
-      // For now, just navigate to dashboard
+    try {
+      console.log('Google Auth Response:', response);
+      const res = await fetch('http://127.0.0.1:8060/google-login', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ id_token_str: response.credential }),
+      });
+
+      if (!res.ok) {
+        const errorData = await res.json();
+        console.error('Backend Error Data:', errorData);
+        throw new Error(errorData.detail || 'Google login failed');
+      }
+
+      const data = await res.json();
+      console.log('Backend Response Data:', data);
+      localStorage.setItem('token', data.access_token);
+      // Fetch user data after successful login
+      const userRes = await fetch('http://localhost:8060/users/me', {
+        headers: {
+          'Authorization': `Bearer ${data.access_token}`,
+        },
+      });
+      if (userRes.ok) {
+        const userData = await userRes.json();
+        setUser(userData);
+      } else {
+        console.error('Failed to fetch user data');
+      }
       navigate('/');
-    }, 1500);
+    } catch (error: unknown) {
+      console.error('Google login error:', (error as Error).message);
+      setErrorMessage((error as Error).message);
+    } finally {
+      setIsGoogleLoading(false);
+    }
   };
+
+  useEffect(() => {
+    google.accounts.id.initialize({
+      client_id: import.meta.env.VITE_GOOGLE_CLIENT_ID,
+      callback: handleGoogleLogin,
+      ux_mode: 'popup',
+    });
+    google.accounts.id.renderButton(
+      document.getElementById('google-sign-in-button'),
+      { theme: 'outline', size: 'large', width: '100%' }
+    );
+  }, [handleGoogleLogin]);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-primary-green/10 to-accent-yellow/10 flex items-center justify-center p-4">
@@ -54,6 +131,21 @@ const Login = () => {
           </CardDescription>
         </CardHeader>
         <CardContent>
+          {errorMessage && (
+            <div className="mb-4">
+              <div className="flex items-center justify-between bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative" role="alert">
+                <span className="block sm:inline">{errorMessage}</span>
+                <button
+                  type="button"
+                  className="ml-2 text-red-700 hover:text-red-900"
+                  onClick={() => setErrorMessage('')}
+                  aria-label="Dismiss"
+                >
+                  &times;
+                </button>
+              </div>
+            </div>
+          )}
           <form onSubmit={handleLogin} className="space-y-6">
             <div className="space-y-2">
               <Label htmlFor="email" className="text-sm font-medium text-gray-700">
@@ -69,7 +161,6 @@ const Login = () => {
                 required
               />
             </div>
-            
             <div className="space-y-2">
               <Label htmlFor="password" className="text-sm font-medium text-gray-700">
                 Password
@@ -94,8 +185,8 @@ const Login = () => {
               </div>
             </div>
 
-            <Button 
-              type="submit" 
+            <Button
+              type="submit"
               className="w-full bg-primary-green hover:bg-green-700 text-white font-semibold py-2 px-4 rounded-md transition-colors"
               disabled={isLoading}
             >
@@ -111,39 +202,26 @@ const Login = () => {
               </div>
             </div>
 
-            <Button
-              onClick={handleGoogleLogin}
-              variant="outline"
-              className="w-full mt-4 border-gray-300 hover:bg-gray-50 text-gray-700 font-medium py-2 px-4 rounded-md transition-colors"
-              disabled={isGoogleLoading}
-            >
-              <svg className="w-5 h-5 mr-2" viewBox="0 0 24 24">
-                <path
-                  fill="#4285F4"
-                  d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
-                />
-                <path
-                  fill="#34A853"
-                  d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"
-                />
-                <path
-                  fill="#FBBC05"
-                  d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"
-                />
-                <path
-                  fill="#EA4335"
-                  d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"
-                />
-              </svg>
-              {isGoogleLoading ? 'Signing in with Google...' : 'Sign In with Google'}
-            </Button>
+            {/* Google Sign In Button Wrapper */}
+            <div className="w-full mt-4 relative">
+              {/* Overlay to disable button while loading */}
+              {isGoogleLoading && (
+                <div className="absolute inset-0 bg-white bg-opacity-80 flex items-center justify-center z-10 rounded">
+                  <span className="text-primary-green font-semibold">Signing in...</span>
+                </div>
+              )}
+              <div
+                id="google-sign-in-button"
+                className={`w-full ${isGoogleLoading ? 'pointer-events-none opacity-60' : ''}`}
+              ></div>
+            </div>
           </div>
 
           <div className="mt-6 text-center">
             <p className="text-sm text-gray-600">
               Don't have an account?{' '}
-              <Link 
-                to="/signup" 
+              <Link
+                to="/signup"
                 className="text-primary-green font-medium hover:text-green-700 transition-colors"
               >
                 Sign up here

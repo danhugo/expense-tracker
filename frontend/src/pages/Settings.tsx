@@ -1,5 +1,6 @@
 
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
+import { useUser } from '../contexts/UserContext';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../components/ui/tabs';
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card';
 import { Input } from '../components/ui/input';
@@ -10,10 +11,15 @@ import { Alert, AlertDescription } from '../components/ui/alert';
 import { Progress } from '../components/ui/progress';
 
 const Settings = () => {
+  const { user, setUser } = useUser();
   const [personalInfo, setPersonalInfo] = useState({
-    name: 'John Doe',
-    email: 'john.doe@example.com'
+    name: user?.name || '',
+    email: user?.email || ''
   });
+  const [profilePictureFile, setProfilePictureFile] = useState<File | null>(null);
+  const [isUploading, setIsUploading] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [previewPictureUrl, setPreviewPictureUrl] = useState<string | null>(null);
 
   const [passwordData, setPasswordData] = useState({
     currentPassword: '',
@@ -30,9 +36,102 @@ const Settings = () => {
     return { strength: 100, label: 'Strong', color: 'bg-primary-green' };
   };
 
-  const handlePersonalSave = () => {
-    setFeedback({ type: 'success', message: 'Personal information updated successfully!' });
-    setTimeout(() => setFeedback({ type: '', message: '' }), 3000);
+  const handleProfilePictureChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0]) {
+      setProfilePictureFile(e.target.files[0]);
+      setPreviewPictureUrl(URL.createObjectURL(e.target.files[0]));
+    }
+  };
+
+  const handleProfilePictureUpload = async () => {
+    if (!profilePictureFile) return;
+    setIsUploading(true);
+    const token = localStorage.getItem('token');
+    const formData = new FormData();
+    formData.append('file', profilePictureFile);
+
+    try {
+      const res = await fetch('http://localhost:8060/users/me/profile-picture', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+        },
+        body: formData,
+      });
+      if (!res.ok) {
+        const errorData = await res.json();
+        setFeedback({ type: 'error', message: errorData.detail || 'Failed to upload profile picture.' });
+        return;
+      }
+      const updatedUser = await res.json();
+      setUser(updatedUser);
+      setFeedback({ type: 'success', message: 'Profile picture updated successfully!' });
+      setProfilePictureFile(null);
+      if (fileInputRef.current) fileInputRef.current.value = '';
+    } catch (error: unknown) {
+      setFeedback({ type: 'error', message: 'Failed to upload profile picture.' });
+    } finally {
+      setIsUploading(false);
+      setTimeout(() => setFeedback({ type: '', message: '' }), 3000);
+    }
+  };
+
+  const handlePersonalSave = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      if (!token) {
+        setFeedback({ type: 'error', message: 'Authentication token not found.' });
+        return;
+      }
+
+      // 1. Upload profile picture if selected
+      let updatedUser = user;
+      if (profilePictureFile) {
+        setPreviewPictureUrl(null);
+        const formData = new FormData();
+        formData.append('file', profilePictureFile);
+        const res = await fetch('http://localhost:8060/users/me/profile-picture', {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${token}`,
+          },
+          body: formData,
+        });
+        if (!res.ok) {
+          const errorData = await res.json();
+          setFeedback({ type: 'error', message: errorData.detail || 'Failed to upload profile picture.' });
+          return;
+        }
+        updatedUser = await res.json();
+        setUser(updatedUser);
+        setProfilePictureFile(null);
+        if (fileInputRef.current) fileInputRef.current.value = '';
+      }
+
+      // 2. Update personal info
+      const res = await fetch('http://localhost:8060/users/me', {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
+        },
+        body: JSON.stringify(personalInfo),
+      });
+
+      if (!res.ok) {
+        const errorData = await res.json();
+        throw new Error(errorData.detail || 'Failed to update personal information.');
+      }
+
+      updatedUser = await res.json();
+      setUser(updatedUser);
+      setFeedback({ type: 'success', message: 'Personal information updated successfully!' });
+    } catch (error: unknown) {
+      console.error('Error updating personal info:', error);
+      setFeedback({ type: 'error', message: (error as Error).message || 'Failed to update personal information.' });
+    } finally {
+      setTimeout(() => setFeedback({ type: '', message: '' }), 3000);
+    }
   };
 
   const handlePasswordChange = () => {
@@ -106,16 +205,38 @@ const Settings = () => {
               <div>
                 <Label>Profile Picture</Label>
                 <div className="flex items-center space-x-4 mt-2">
-                  <div className="w-16 h-16 bg-gray-200 rounded-full flex items-center justify-center">
-                    <span className="text-gray-500 text-2xl font-semibold">
-                      {personalInfo.name.charAt(0)}
-                    </span>
-                  </div>
-                  <Button variant="secondary">Upload Image</Button>
+                  {/* Show preview if a new image is selected, else show current profile picture */}
+                  {previewPictureUrl ? (
+                    <img src={previewPictureUrl} alt="Preview" className="w-16 h-16 rounded-full object-cover border-2 border-primary-green" />
+                  ) : user?.profile_picture_url ? (
+                    <img src={user.profile_picture_url} alt="Profile" className="w-16 h-16 rounded-full object-cover" />
+                  ) : (
+                    <div className="w-16 h-16 bg-gray-200 rounded-full flex items-center justify-center">
+                      <span className="text-gray-500 text-2xl font-semibold">
+                        {personalInfo.name.charAt(0)}
+                      </span>
+                    </div>
+                  )}
+                  <input
+                    type="file"
+                    accept="image/*"
+                    ref={fileInputRef}
+                    onChange={handleProfilePictureChange}
+                    className="hidden"
+                    id="profile-picture-upload"
+                  />
+                  <Button
+                    variant="secondary"
+                    onClick={() => fileInputRef.current?.click()}
+                    disabled={isUploading}
+                  >
+                    {isUploading ? 'Uploading...' : 'Upload Image'}
+                  </Button>
                 </div>
+
               </div>
-              <Button onClick={handlePersonalSave} className="bg-primary-green hover:bg-green-700">
-                Save Changes
+              <Button onClick={handlePersonalSave} className="bg-primary-green hover:bg-green-700" disabled={isUploading}>
+                {isUploading ? 'Saving...' : 'Save Changes'}
               </Button>
             </CardContent>
           </Card>
@@ -151,10 +272,9 @@ const Settings = () => {
                     <div className="mt-2">
                       <div className="flex justify-between text-sm mb-1">
                         <span>Password Strength</span>
-                        <span className={`font-medium ${
-                          passwordStrength.strength === 100 ? 'text-green-600' :
+                        <span className={`font-medium ${passwordStrength.strength === 100 ? 'text-green-600' :
                           passwordStrength.strength === 50 ? 'text-yellow-600' : 'text-red-600'
-                        }`}>
+                          }`}>
                           {passwordStrength.label}
                         </span>
                       </div>

@@ -2,11 +2,13 @@
 import { useState, useRef, useEffect } from 'react';
 import { User, Settings, LogOut, ChevronDown } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { useUser } from '../contexts/UserContext';
 
 const UserDropdown = () => {
   const [isOpen, setIsOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
   const navigate = useNavigate();
+  const { user, setUser } = useUser();
 
   // Close dropdown when clicking outside
   useEffect(() => {
@@ -27,8 +29,9 @@ const UserDropdown = () => {
 
   const handleSignOut = () => {
     setIsOpen(false);
-    // Add logout logic here
-    console.log('User signed out');
+    localStorage.removeItem('token');
+    setUser(null);
+    navigate('/login');
   };
 
   return (
@@ -38,9 +41,13 @@ const UserDropdown = () => {
         onClick={() => setIsOpen(!isOpen)}
         className="flex items-center space-x-2 p-2 rounded-lg hover:bg-gray-100 transition-colors"
       >
-        <div className="w-8 h-8 bg-gradient-to-r from-primary-green to-green-600 rounded-full flex items-center justify-center">
-          <span className="text-white text-sm font-semibold">JD</span>
-        </div>
+        {user?.profile_picture_url ? (
+          <img src={user.profile_picture_url} alt="Profile" className="w-8 h-8 rounded-full object-cover" />
+        ) : (
+          <div className="w-8 h-8 bg-gradient-to-r from-primary-green to-green-600 rounded-full flex items-center justify-center">
+            <span className="text-white text-sm font-semibold">{user?.name?.charAt(0).toUpperCase() || ''}</span>
+          </div>
+        )}
         <ChevronDown className={`h-4 w-4 text-gray-600 transition-transform ${isOpen ? 'rotate-180' : ''}`} />
       </button>
 
@@ -54,8 +61,8 @@ const UserDropdown = () => {
                 <span className="text-white text-lg font-semibold">JD</span>
               </div>
               <div className="flex-1 min-w-0">
-                <p className="text-sm font-semibold text-gray-900 truncate">John Doe</p>
-                <p className="text-xs text-gray-600 truncate">john.doe@example.com</p>
+                <p className="text-sm font-semibold text-gray-900 truncate">{user?.name}</p>
+                <p className="text-xs text-gray-600 truncate">{user?.email}</p>
               </div>
             </div>
             

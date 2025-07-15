@@ -23,7 +23,7 @@ interface RecurringTransaction {
 interface RecurringTransactionModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onSave: (transaction: Omit<RecurringTransaction, 'id' | 'nextDue'>) => void;
+  onSave: (transaction: Omit<RecurringTransaction, 'id' | 'nextDue'> & { endDate?: string; occurrences?: number }) => void;
   transaction?: RecurringTransaction;
 }
 
@@ -76,7 +76,7 @@ const RecurringTransactionModal = ({ isOpen, onClose, onSave, transaction }: Rec
     }
   }, [transaction, isOpen]);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     
     const transactionData = {
@@ -176,7 +176,7 @@ const RecurringTransactionModal = ({ isOpen, onClose, onSave, transaction }: Rec
 
             <div>
               <Label htmlFor="frequency">Frequency</Label>
-              <Select value={formData.frequency} onValueChange={(value) => setFormData(prev => ({ ...prev, frequency: value as any }))}>
+              <Select value={formData.frequency} onValueChange={(value) => setFormData(prev => ({ ...prev, frequency: value as "Daily" | "Weekly" | "Monthly" | "Annually" }))}>
                 <SelectTrigger>
                   <SelectValue />
                 </SelectTrigger>
@@ -204,7 +204,7 @@ const RecurringTransactionModal = ({ isOpen, onClose, onSave, transaction }: Rec
               <Label>End Date</Label>
               <RadioGroup
                 value={formData.endType}
-                onValueChange={(value) => setFormData(prev => ({ ...prev, endType: value as any }))}
+                onValueChange={(value) => setFormData(prev => ({ ...prev, endType: value as "never" | "date" | "occurrences" }))}
                 className="space-y-3 mt-2"
               >
                 <div className="flex items-center space-x-2">
