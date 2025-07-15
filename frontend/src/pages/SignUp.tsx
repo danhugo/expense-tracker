@@ -8,19 +8,65 @@ import { Label } from '../components/ui/label';
 import { Separator } from '../components/ui/separator';
 import { Eye, EyeOff } from 'lucide-react';
 
-const Login = () => {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
+const SignUp = () => {
+  const [formData, setFormData] = useState({
+    fullName: '',
+    email: '',
+    password: '',
+    confirmPassword: ''
+  });
   const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [errors, setErrors] = useState<Record<string, string>>({});
   const [isLoading, setIsLoading] = useState(false);
   const [isGoogleLoading, setIsGoogleLoading] = useState(false);
   const navigate = useNavigate();
 
-  const handleLogin = async (e: React.FormEvent) => {
+  const validateForm = () => {
+    const newErrors: Record<string, string> = {};
+
+    if (!formData.fullName.trim()) {
+      newErrors.fullName = 'Full name is required';
+    }
+
+    if (!formData.email.trim()) {
+      newErrors.email = 'Email is required';
+    } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
+      newErrors.email = 'Please enter a valid email address';
+    }
+
+    if (!formData.password) {
+      newErrors.password = 'Password is required';
+    } else if (formData.password.length < 6) {
+      newErrors.password = 'Password must be at least 6 characters';
+    }
+
+    if (!formData.confirmPassword) {
+      newErrors.confirmPassword = 'Please confirm your password';
+    } else if (formData.password !== formData.confirmPassword) {
+      newErrors.confirmPassword = 'Passwords do not match';
+    }
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
+  const handleInputChange = (field: string, value: string) => {
+    setFormData(prev => ({ ...prev, [field]: value }));
+    // Clear error when user starts typing
+    if (errors[field]) {
+      setErrors(prev => ({ ...prev, [field]: '' }));
+    }
+  };
+
+  const handleSignUp = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    if (!validateForm()) return;
+
     setIsLoading(true);
     
-    // Simulate login process
+    // Simulate signup process
     setTimeout(() => {
       setIsLoading(false);
       // For now, just navigate to dashboard
@@ -28,7 +74,7 @@ const Login = () => {
     }, 1000);
   };
 
-  const handleGoogleLogin = async () => {
+  const handleGoogleSignUp = async () => {
     setIsGoogleLoading(true);
     
     // Simulate Google OAuth process
@@ -48,13 +94,31 @@ const Login = () => {
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1" />
             </svg>
           </div>
-          <CardTitle className="text-2xl font-bold text-gray-800">Welcome Back</CardTitle>
+          <CardTitle className="text-2xl font-bold text-gray-800">Join Us!</CardTitle>
           <CardDescription className="text-gray-600">
-            Sign in to your Personal Expense Manager
+            Start managing your personal expenses today
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <form onSubmit={handleLogin} className="space-y-6">
+          <form onSubmit={handleSignUp} className="space-y-6">
+            <div className="space-y-2">
+              <Label htmlFor="fullName" className="text-sm font-medium text-gray-700">
+                Full Name
+              </Label>
+              <Input
+                id="fullName"
+                type="text"
+                placeholder="Enter your full name"
+                value={formData.fullName}
+                onChange={(e) => handleInputChange('fullName', e.target.value)}
+                className={`w-full ${errors.fullName ? 'border-red-500' : ''}`}
+                required
+              />
+              {errors.fullName && (
+                <p className="text-sm text-red-500">{errors.fullName}</p>
+              )}
+            </div>
+
             <div className="space-y-2">
               <Label htmlFor="email" className="text-sm font-medium text-gray-700">
                 Email Address
@@ -63,11 +127,14 @@ const Login = () => {
                 id="email"
                 type="email"
                 placeholder="Enter your email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                className="w-full"
+                value={formData.email}
+                onChange={(e) => handleInputChange('email', e.target.value)}
+                className={`w-full ${errors.email ? 'border-red-500' : ''}`}
                 required
               />
+              {errors.email && (
+                <p className="text-sm text-red-500">{errors.email}</p>
+              )}
             </div>
             
             <div className="space-y-2">
@@ -78,10 +145,10 @@ const Login = () => {
                 <Input
                   id="password"
                   type={showPassword ? "text" : "password"}
-                  placeholder="Enter your password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  className="w-full pr-10"
+                  placeholder="Create your password"
+                  value={formData.password}
+                  onChange={(e) => handleInputChange('password', e.target.value)}
+                  className={`w-full pr-10 ${errors.password ? 'border-red-500' : ''}`}
                   required
                 />
                 <button
@@ -92,6 +159,36 @@ const Login = () => {
                   {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                 </button>
               </div>
+              {errors.password && (
+                <p className="text-sm text-red-500">{errors.password}</p>
+              )}
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="confirmPassword" className="text-sm font-medium text-gray-700">
+                Confirm Password
+              </Label>
+              <div className="relative">
+                <Input
+                  id="confirmPassword"
+                  type={showConfirmPassword ? "text" : "password"}
+                  placeholder="Re-enter your password"
+                  value={formData.confirmPassword}
+                  onChange={(e) => handleInputChange('confirmPassword', e.target.value)}
+                  className={`w-full pr-10 ${errors.confirmPassword ? 'border-red-500' : ''}`}
+                  required
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-gray-700"
+                >
+                  {showConfirmPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                </button>
+              </div>
+              {errors.confirmPassword && (
+                <p className="text-sm text-red-500">{errors.confirmPassword}</p>
+              )}
             </div>
 
             <Button 
@@ -99,7 +196,7 @@ const Login = () => {
               className="w-full bg-primary-green hover:bg-green-700 text-white font-semibold py-2 px-4 rounded-md transition-colors"
               disabled={isLoading}
             >
-              {isLoading ? 'Signing In...' : 'Sign In'}
+              {isLoading ? 'Creating Account...' : 'Create Account'}
             </Button>
           </form>
 
@@ -112,7 +209,7 @@ const Login = () => {
             </div>
 
             <Button
-              onClick={handleGoogleLogin}
+              onClick={handleGoogleSignUp}
               variant="outline"
               className="w-full mt-4 border-gray-300 hover:bg-gray-50 text-gray-700 font-medium py-2 px-4 rounded-md transition-colors"
               disabled={isGoogleLoading}
@@ -135,26 +232,20 @@ const Login = () => {
                   d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"
                 />
               </svg>
-              {isGoogleLoading ? 'Signing in with Google...' : 'Sign In with Google'}
+              {isGoogleLoading ? 'Signing up with Google...' : 'Sign Up with Google'}
             </Button>
           </div>
 
           <div className="mt-6 text-center">
             <p className="text-sm text-gray-600">
-              Don't have an account?{' '}
+              Already have an account?{' '}
               <Link 
-                to="/signup" 
+                to="/login" 
                 className="text-primary-green font-medium hover:text-green-700 transition-colors"
               >
-                Sign up here
+                Sign in here
               </Link>
             </p>
-          </div>
-
-          <div className="mt-4 text-center">
-            <button className="text-sm text-gray-500 hover:text-gray-700 transition-colors">
-              Forgot your password?
-            </button>
           </div>
         </CardContent>
       </Card>
@@ -162,4 +253,4 @@ const Login = () => {
   );
 };
 
-export default Login;
+export default SignUp;
