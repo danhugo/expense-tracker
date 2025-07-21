@@ -9,7 +9,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../co
 import { Input } from '../components/ui/input';
 import { Label } from '../components/ui/label';
 import { Separator } from '../components/ui/separator';
-import { Eye, EyeOff } from 'lucide-react';
+import ErrorNotification from '../components/ErrorNotification';
+import {Eye, EyeOff} from 'lucide-react';
 
 const Login = () => {
   const [email, setEmail] = useState('');
@@ -18,12 +19,16 @@ const Login = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [isGoogleLoading, setIsGoogleLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
+  const [isGoogleAccountError, setIsGoogleAccountError] = useState(false);
   const navigate = useNavigate();
   const { setUser } = useUser();
 
   const handleLogin = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setIsLoading(true);
+    setErrorMessage('');
+    setIsGoogleAccountError(false);
+
     try {
       const res = await fetch('http://localhost:8060/login', {
         method: 'POST',
@@ -55,8 +60,14 @@ const Login = () => {
       }
       navigate('/');
     } catch (error: unknown) {
-      console.error('Login error:', (error as Error).message);
-      setErrorMessage((error as Error).message);
+      const message = (error as Error).message;
+      console.error('Login error:', message);
+      if (message.includes('created with Google')) {
+        setErrorMessage('It looks like your account was created with Google. Please continue with Google to sign in.');
+        setIsGoogleAccountError(true);
+      } else {
+        setErrorMessage(message);
+      }
     } finally {
       setIsLoading(false);
     }
@@ -92,6 +103,8 @@ const Login = () => {
       if (userRes.ok) {
         const userData = await userRes.json();
         setUser(userData);
+        setErrorMessage(''); // Clear any previous errors
+        setIsGoogleAccountError(false);
       } else {
         console.error('Failed to fetch user data');
       }
@@ -105,16 +118,28 @@ const Login = () => {
   };
 
   useEffect(() => {
+    const renderGoogleButton = (id: string) => {
+      if (document.getElementById(id)) {
+        google.accounts.id.renderButton(
+          document.getElementById(id)!,
+          { theme: 'outline', size: 'large', width: '100%' }
+        );
+      }
+    };
+
     google.accounts.id.initialize({
       client_id: import.meta.env.VITE_GOOGLE_CLIENT_ID,
       callback: handleGoogleLogin,
       ux_mode: 'popup',
     });
-    google.accounts.id.renderButton(
-      document.getElementById('google-sign-in-button'),
-      { theme: 'outline', size: 'large', width: '100%' }
-    );
-  }, [handleGoogleLogin]);
+
+    renderGoogleButton('google-sign-in-button');
+
+    if (isGoogleAccountError) {
+      renderGoogleButton('google-sign-in-button-error');
+    }
+
+  }, [isGoogleAccountError, handleGoogleLogin]);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-primary-green/10 to-accent-yellow/10 flex items-center justify-center p-4">
@@ -131,21 +156,12 @@ const Login = () => {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          {errorMessage && (
-            <div className="mb-4">
-              <div className="flex items-center justify-between bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative" role="alert">
-                <span className="block sm:inline">{errorMessage}</span>
-                <button
-                  type="button"
-                  className="ml-2 text-red-700 hover:text-red-900"
-                  onClick={() => setErrorMessage('')}
-                  aria-label="Dismiss"
-                >
-                  &times;
-                </button>
-              </div>
-            </div>
-          )}
+          <ErrorNotification 
+            message={errorMessage}
+            isGoogleError={isGoogleAccountError}
+            onDismiss={() => setErrorMessage('')}
+            googleSignInId="google-sign-in-button-error"
+          />
           <form onSubmit={handleLogin} className="space-y-6">
             <div className="space-y-2">
               <Label htmlFor="email" className="text-sm font-medium text-gray-700">
@@ -188,7 +204,7 @@ const Login = () => {
             <Button
               type="submit"
               className="w-full bg-primary-green hover:bg-green-700 text-white font-semibold py-2 px-4 rounded-md transition-colors"
-              disabled={isLoading}
+              disabled={isLoading || isGoogleAccountError}
             >
               {isLoading ? 'Signing In...' : 'Sign In'}
             </Button>
@@ -203,18 +219,20 @@ const Login = () => {
             </div>
 
             {/* Google Sign In Button Wrapper */}
-            <div className="w-full mt-4 relative">
-              {/* Overlay to disable button while loading */}
-              {isGoogleLoading && (
-                <div className="absolute inset-0 bg-white bg-opacity-80 flex items-center justify-center z-10 rounded">
-                  <span className="text-primary-green font-semibold">Signing in...</span>
-                </div>
-              )}
-              <div
-                id="google-sign-in-button"
-                className={`w-full ${isGoogleLoading ? 'pointer-events-none opacity-60' : ''}`}
-              ></div>
-            </div>
+            {!isGoogleAccountError && (
+              <div className="w-full mt-4 relative">
+                {/* Overlay to disable button while loading */}
+                {isGoogleLoading && (
+                  <div className="absolute inset-0 bg-white bg-opacity-80 flex items-center justify-center z-10 rounded">
+                    <span className="text-primary-green font-semibold">Signing in...</span>
+                  </div>
+                )}
+                <div
+                  id="google-sign-in-button"
+                  className={`w-full ${isGoogleLoading ? 'pointer-events-none opacity-60' : ''}`}
+                ></div>
+              </div>
+            )}
           </div>
 
           <div className="mt-6 text-center">
