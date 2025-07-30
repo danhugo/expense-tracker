@@ -101,7 +101,7 @@ const SignUp = () => {
       }
 
       const data = await res.json();
-      localStorage.setItem('token', data.access_token);
+      localStorage.setItem('accessToken', data.access_token);
       // Fetch user data after successful signup
       const userRes = await fetch('http://localhost:8060/users/me', {
         headers: {

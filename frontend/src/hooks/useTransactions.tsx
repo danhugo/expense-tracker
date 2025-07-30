@@ -1,115 +1,162 @@
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Transaction, DashboardStats } from '../types/transaction';
-
-const STORAGE_KEY = 'expense-manager-transactions';
-
-// Sample data for demonstration
-const sampleTransactions: Transaction[] = [
-  {
-    id: '1',
-    amount: 3500.00,
-    type: 'income',
-    category: 'Salary',
-    description: 'Monthly salary',
-    date: '2025-01-01',
-    createdAt: new Date().toISOString(),
-  },
-  {
-    id: '2',
-    amount: 45.50,
-    type: 'expense',
-    category: 'Food & Dining',
-    description: 'Lunch at cafe',
-    date: '2025-01-05',
-    createdAt: new Date().toISOString(),
-  },
-  {
-    id: '3',
-    amount: 120.00,
-    type: 'expense',
-    category: 'Shopping',
-    description: 'Groceries',
-    date: '2025-01-04',
-    createdAt: new Date().toISOString(),
-  },
-  {
-    id: '4',
-    amount: 850.00,
-    type: 'expense',
-    category: 'Bills & Utilities',
-    description: 'Rent payment',
-    date: '2025-01-01',
-    createdAt: new Date().toISOString(),
-  }
-];
+import { API_BASE_URL } from '../config';
 
 export const useTransactions = () => {
   const [transactions, setTransactions] = useState<Transaction[]>([]);
+  const [loading, setLoading] = useState<boolean>(true);
+  const [error, setError] = useState<string | null>(null);
 
-  // Load transactions from localStorage on mount
-  useEffect(() => {
-    const stored = localStorage.getItem(STORAGE_KEY);
-    if (stored) {
-      setTransactions(JSON.parse(stored));
-    } else {
-      // Initialize with sample data
-      setTransactions(sampleTransactions);
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(sampleTransactions));
+  // Function to fetch transactions from the backend
+  const fetchTransactions = useCallback(async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const token = localStorage.getItem('accessToken'); // Assuming you store token in localStorage
+      if (!token) {
+        setError("Authentication token not found. Please log in.");
+        setLoading(false);
+        return;
+      }
+
+      const response = await fetch(`${API_BASE_URL}/transactions`, {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.detail || `Failed to fetch transactions: ${response.statusText}`);
+      }
+      const data: Transaction[] = await response.json();
+      setTransactions(data);
+    } catch (err: any) {
+      setError(err.message || 'An unknown error occurred while fetching transactions.');
+      console.error("Failed to fetch transactions:", err);
+    } finally {
+      setLoading(false);
     }
   }, []);
 
   // Save to localStorage whenever transactions change
   useEffect(() => {
-    if (transactions.length > 0) {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(transactions));
+    fetchTransactions();
+  }, [fetchTransactions]);
+
+  const addTransaction = async (transactionData: Omit<Transaction, 'id' | 'created_at'>) => {
+    try {
+      const token = localStorage.getItem('accessToken');
+      if (!token) throw new Error("Authentication token not found.");
+
+      const response = await fetch(`${API_BASE_URL}/transactions`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify(transactionData)
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.detail || `Failed to add transaction: ${response.statusText}`);
+      }
+      const addedTransaction: Transaction = await response.json();
+      setTransactions(prev => [addedTransaction, ...prev]); // Add new transaction to the top
+      return addedTransaction;
+    } catch (err: any) {
+      setError(err.message || 'Error adding transaction');
+      throw err; // Re-throw to allow component to handle
     }
-  }, [transactions]);
-
-  const addTransaction = (transactionData: Omit<Transaction, 'id' | 'createdAt'>) => {
-    const newTransaction: Transaction = {
-      ...transactionData,
-      id: Date.now().toString(),
-      createdAt: new Date().toISOString(),
-    };
-    setTransactions(prev => [newTransaction, ...prev]);
   };
 
-  const updateTransaction = (id: string, transactionData: Omit<Transaction, 'id' | 'createdAt'>) => {
-    setTransactions(prev => prev.map(transaction => 
-      transaction.id === id 
-        ? { ...transaction, ...transactionData }
-        : transaction
-    ));
+  const updateTransaction = async (id: number, transactionData: Omit<Transaction, 'id' | 'created_at'>) => {
+    try {
+      const token = localStorage.getItem('accessToken');
+      if (!token) throw new Error("Authentication token not found.");
+
+      const response = await fetch(`${API_BASE_URL}/transactions/${id}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify(transactionData)
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.detail || `Failed to update transaction: ${response.statusText}`);
+      }
+      const updatedTransaction: Transaction = await response.json();
+      setTransactions(prev => prev.map(t => t.id === updatedTransaction.id ? updatedTransaction : t));
+      return updatedTransaction;
+    } catch (err: any) {
+      setError(err.message || 'Error updating transaction');
+      throw err;
+    }
   };
 
-  const deleteTransaction = (id: string) => {
-    setTransactions(prev => prev.filter(transaction => transaction.id !== id));
+  const deleteTransaction = async (id: number) => {
+    try {
+      const token = localStorage.getItem('accessToken');
+      if (!token) throw new Error("Authentication token not found.");
+
+      const response = await fetch(`${API_BASE_URL}/transactions/${id}`, {
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.detail || `Failed to delete transaction: ${response.statusText}`);
+      }
+      setTransactions(prev => prev.filter(t => t.id !== String(id)));
+    } catch (err: any) {
+      setError(err.message || 'Error deleting transaction');
+      throw err;
+    }
   };
 
-  const getDashboardStats = (): DashboardStats => {
-    const currentMonth = new Date().getMonth();
-    const currentYear = new Date().getFullYear();
-    
-    const monthlyTransactions = transactions.filter(transaction => {
-      const transactionDate = new Date(transaction.date);
-      return transactionDate.getMonth() === currentMonth && 
-             transactionDate.getFullYear() === currentYear;
-    });
-
-    const monthlyIncome = monthlyTransactions
-      .filter(t => t.type === 'income')
+  const getDashboardStats = useCallback((): DashboardStats => {
+    // You might need to adjust this if your backend provides aggregated stats
+    const totalIncome = transactions
+      .filter(t => t.type.toLowerCase() === 'income')
       .reduce((sum, t) => sum + t.amount, 0);
 
-    const monthlyExpenses = monthlyTransactions
-      .filter(t => t.type === 'expense')
+    const totalExpense = transactions
+      .filter(t => t.type.toLowerCase() === 'expense')
       .reduce((sum, t) => sum + t.amount, 0);
 
     const totalBalance = transactions.reduce((sum, transaction) => {
-      return transaction.type === 'income' 
-        ? sum + transaction.amount 
+      return transaction.type.toLowerCase() === 'income'
+        ? sum + transaction.amount
         : sum - transaction.amount;
     }, 0);
+
+    // For monthly stats, you'd typically filter by month on the frontend
+    // or request specific monthly stats from the backend.
+    // For simplicity, this calculates based on all fetched transactions.
+    const currentMonth = new Date().getMonth();
+    const currentYear = new Date().getFullYear();
+
+    const monthlyTransactions = transactions.filter(transaction => {
+        const transactionDate = new Date(transaction.date);
+        return transactionDate.getMonth() === currentMonth &&
+               transactionDate.getFullYear() === currentYear;
+    });
+
+    const monthlyIncome = monthlyTransactions
+      .filter(t => t.type.toLowerCase() === 'income')
+      .reduce((sum, t) => sum + t.amount, 0);
+
+    const monthlyExpenses = monthlyTransactions
+      .filter(t => t.type.toLowerCase() === 'expense')
+      .reduce((sum, t) => sum + t.amount, 0);
 
     return {
       totalBalance,
@@ -117,13 +164,16 @@ export const useTransactions = () => {
       monthlyExpenses,
       transactionCount: transactions.length,
     };
-  };
+  }, [transactions]);
 
   return {
     transactions,
+    loading,
+    error,
+    getDashboardStats,
+    fetchTransactions, // Exposed to allow manual refetching
     addTransaction,
     updateTransaction,
     deleteTransaction,
-    getDashboardStats,
   };
 };

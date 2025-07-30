@@ -45,7 +45,7 @@ const Login = () => {
       }
 
       const data = await res.json();
-      localStorage.setItem('token', data.access_token);
+      localStorage.setItem('accessToken', data.access_token);
 
       // Fetch user data after successful login
       const userRes = await fetch('http://localhost:8060/users/me', {
@@ -94,7 +94,7 @@ const Login = () => {
 
       const data = await res.json();
       console.log('Backend Response Data:', data);
-      localStorage.setItem('token', data.access_token);
+      localStorage.setItem('accessToken', data.access_token);
       // Fetch user data after successful login
       const userRes = await fetch('http://localhost:8060/users/me', {
         headers: {

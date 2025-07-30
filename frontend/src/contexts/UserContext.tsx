@@ -8,7 +8,7 @@ export const UserProvider = ({ children }) => {
   const [loading, setLoading] = useState(true); // ✅
 
   useEffect(() => {
-    const token = localStorage.getItem("token");
+    const token = localStorage.getItem("accessToken");
     if (token) {
       fetch("http://localhost:8060/users/me", {
         headers: { Authorization: `Bearer ${token}` },

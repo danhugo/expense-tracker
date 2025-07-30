@@ -46,7 +46,7 @@ const Settings = () => {
   const handleProfilePictureUpload = async () => {
     if (!profilePictureFile) return;
     setIsUploading(true);
-    const token = localStorage.getItem('token');
+    const token = localStorage.getItem('accessToken');
     const formData = new FormData();
     formData.append('file', profilePictureFile);
 
@@ -78,7 +78,7 @@ const Settings = () => {
 
   const handlePersonalSave = async () => {
     try {
-      const token = localStorage.getItem('token');
+      const token = localStorage.getItem('accessToken');
       if (!token) {
         setFeedback({ type: 'error', message: 'Authentication token not found.' });
         return;
