@@ -124,13 +124,11 @@ const SignUp = () => {
   };
 
   useEffect(() => {
-    // @ts-expect-error: Google's types are not available
     google.accounts.id.initialize({
       client_id: import.meta.env.VITE_GOOGLE_CLIENT_ID,
       callback: handleGoogleSignUp,
       ux_mode: 'popup',
     });
-    // @ts-expect-error: Google's types are not available
     google.accounts.id.renderButton(
       document.getElementById('google-sign-up-button'),
       { theme: 'outline', size: 'large', width: '100%' }
