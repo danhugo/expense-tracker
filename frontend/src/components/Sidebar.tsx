@@ -66,24 +66,6 @@ const Sidebar = ({ isCollapsed, isMobileOpen, onToggle, onCloseMobile, onToggleC
               <X className="h-5 w-5" />
             </button>
 
-            {/* HUFI Logo - only show when expanded on desktop */}
-            {!isCollapsed && user && (
-              <NavLink to="/" className="lg:block hidden">
-                <div className="flex items-center space-x-3 cursor-pointer hover:opacity-90 transition-opacity">
-                  {user.profile_picture_url ? (
-                    <img src={user.profile_picture_url} alt="Profile" className="w-8 h-8 rounded-full" />
-                  ) : (
-                    <div className="w-8 h-8 bg-gradient-to-r from-black to-yellow-400 rounded-full flex items-center justify-center">
-                      <span className="text-white text-lg font-semibold">{user.name?.charAt(0).toUpperCase() || ''}</span>
-                    </div>
-                  )}
-                  <div className="text-2xl font-bold bg-gradient-to-r from-black to-yellow-400 bg-clip-text text-transparent">
-                    {user.name}
-                  </div>
-                </div>
-              </NavLink>
-            )}
-
             {/* Brand for mobile - always visible */}
             <div className="lg:hidden block flex-1 mr-4">
               <NavLink to="/" className="flex items-center space-x-3 cursor-pointer hover:opacity-90 transition-opacity">
