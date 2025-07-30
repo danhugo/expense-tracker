@@ -15,6 +15,7 @@ import RecurringTransactions from './RecurringTransactions';
 import { useTransactions } from '../hooks/useTransactions';
 import { useSidebarState } from '../hooks/useSidebarState';
 import { Transaction } from '../types/transaction';
+import NotFound from './NotFound';
 
 const Index = () => {
   const [modalOpen, setModalOpen] = useState(false);
@@ -124,9 +125,13 @@ const Index = () => {
                   />
                 } 
               />
+              {/* <Route path="/dashboardloading" element={<DashboardLoading />} /> */}
               <Route path="/settings" element={<Settings />} />
               <Route path="/budget" element={<Budget />} />
               <Route path="/recurring" element={<RecurringTransactions />} />
+
+              {/* 404 route last */}
+              <Route path="*" element={<NotFound />} />
             </Routes>
           </div>
         </main>
