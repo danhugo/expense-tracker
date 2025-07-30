@@ -235,7 +235,7 @@ const Settings = () => {
                 </div>
 
               </div>
-              <Button onClick={handlePersonalSave} className="bg-primary-green hover:bg-green-700" disabled={isUploading}>
+              <Button onClick={handlePersonalSave} className="bg-black hover:bg-yellow-500" disabled={isUploading}>
                 {isUploading ? 'Saving...' : 'Save Changes'}
               </Button>
             </CardContent>
@@ -291,7 +291,7 @@ const Settings = () => {
                     onChange={(e) => setPasswordData({ ...passwordData, confirmPassword: e.target.value })}
                   />
                 </div>
-                <Button onClick={handlePasswordChange} className="bg-primary-green hover:bg-green-700">
+                <Button onClick={handlePasswordChange} className="bg-black hover:bg-yellow-500">
                   Change Password
                 </Button>
               </div>
@@ -329,7 +329,7 @@ const Settings = () => {
                   </SelectContent>
                 </Select>
               </div>
-              <Button onClick={handleCurrencySave} className="bg-primary-green hover:bg-green-700">
+              <Button onClick={handleCurrencySave} className="bg-black hover:bg-yellow-500">
                 Save Currency
               </Button>
             </CardContent>

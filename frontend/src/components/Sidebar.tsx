@@ -73,11 +73,11 @@ const Sidebar = ({ isCollapsed, isMobileOpen, onToggle, onCloseMobile, onToggleC
                   {user.profile_picture_url ? (
                     <img src={user.profile_picture_url} alt="Profile" className="w-8 h-8 rounded-full" />
                   ) : (
-                    <div className="w-8 h-8 bg-gradient-to-r from-primary-green to-green-600 rounded-full flex items-center justify-center">
+                    <div className="w-8 h-8 bg-gradient-to-r from-black to-yellow-400 rounded-full flex items-center justify-center">
                       <span className="text-white text-lg font-semibold">{user.name?.charAt(0).toUpperCase() || ''}</span>
                     </div>
                   )}
-                  <div className="text-2xl font-bold bg-gradient-to-r from-primary-green to-green-600 bg-clip-text text-transparent">
+                  <div className="text-2xl font-bold bg-gradient-to-r from-black to-yellow-400 bg-clip-text text-transparent">
                     {user.name}
                   </div>
                 </div>
@@ -90,11 +90,11 @@ const Sidebar = ({ isCollapsed, isMobileOpen, onToggle, onCloseMobile, onToggleC
                 {user?.profile_picture_url ? (
                   <img src={user.profile_picture_url} alt="Profile" className="w-8 h-8 rounded-full" />
                 ) : (
-                  <div className="w-8 h-8 bg-gradient-to-r from-primary-green to-green-600 rounded-full flex items-center justify-center">
+                  <div className="w-8 h-8 bg-gradient-to-r from-black to-yellow-400 rounded-full flex items-center justify-center">
                     <span className="text-white text-lg font-semibold">{user?.name?.charAt(0).toUpperCase() || ''}</span>
                   </div>
                 )}
-                <div className="text-2xl font-bold bg-gradient-to-r from-primary-green to-green-600 bg-clip-text text-transparent">
+                <div className="text-2xl font-bold bg-gradient-to-r from-black to-yellow-400 bg-clip-text text-transparent">
                   {user?.name}
                 </div>
               </NavLink>
@@ -102,7 +102,7 @@ const Sidebar = ({ isCollapsed, isMobileOpen, onToggle, onCloseMobile, onToggleC
           </div>
 
           {/* Navigation */}
-          <nav className={`flex-1 space-y-2 ${isCollapsed ? 'lg:p-2' : 'lg:p-4'} p-4 overflow-y-auto`}>
+          <nav className={`flex-1 space-y-2 ${isCollapsed ? 'py-4 px-2' : 'p-4'}`}>
             {navigationItems.map((item) => (
               <div key={item.name} className="relative group">
                 <NavLink
@@ -110,15 +110,15 @@ const Sidebar = ({ isCollapsed, isMobileOpen, onToggle, onCloseMobile, onToggleC
                   className={({ isActive }) =>
                     `flex items-center text-sm font-medium rounded-lg transition-all duration-200 w-full h-12 ${
                       isActive
-                        ? 'bg-gradient-to-r from-primary-green to-green-600 text-white shadow-sm'
+                        ? 'bg-black text-white shadow-sm'
                         : 'text-gray-700 hover:bg-gray-100 hover:text-gray-800'
                     } ${
-                      isCollapsed ? 'lg:justify-center lg:px-3' : 'lg:px-4'
-                    } px-4`
+                      isCollapsed ? 'justify-center px-0' : 'px-4'
+                    }`
                   }
                   onClick={handleNavClick}
                 >
-                  <item.icon className={`h-5 w-5 flex-shrink-0 ${isCollapsed ? '' : 'lg:mr-3'} mr-3`} />
+                  <item.icon className={`h-5 w-5 flex-shrink-0 ${isCollapsed ? '' : 'mr-3'}`} />
                   <span className={`${isCollapsed ? 'lg:hidden' : 'lg:block'} block truncate`}>
                     {item.name}
                   </span>

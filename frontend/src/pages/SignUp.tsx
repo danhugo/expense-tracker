@@ -10,6 +10,7 @@ import { Input } from '../components/ui/input';
 import { Label } from '../components/ui/label';
 import { Separator } from '../components/ui/separator';
 import { Eye, EyeOff } from 'lucide-react';
+import IntricateDiamond from '@/components/Diamond';
 
 const SignUp = () => {
   const [formData, setFormData] = useState({
@@ -140,10 +141,12 @@ const SignUp = () => {
     <div className="min-h-screen bg-gradient-to-br from-primary-green/10 to-accent-yellow/10 flex items-center justify-center p-4">
       <Card className="w-full max-w-md shadow-xl">
         <CardHeader className="text-center space-y-2">
-          <div className="mx-auto w-16 h-16 bg-primary-green rounded-full flex items-center justify-center mb-4">
-            <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1" />
-            </svg>
+          <div className="mx-auto w-full h-16 bg-primary-green rounded flex items-center justify-center mb-4">
+            <IntricateDiamond className="mr-2" />
+
+            <div className="text-2xl font-bold bg-yellow-400 bg-clip-text text-transparent">
+                HUFI
+            </div>
           </div>
           <CardTitle className="text-2xl font-bold text-gray-800">Join Us!</CardTitle>
           <CardDescription className="text-gray-600">
@@ -260,7 +263,7 @@ const SignUp = () => {
 
             <Button
               type="submit"
-              className="w-full bg-primary-green hover:bg-green-700 text-white font-semibold py-2 px-4 rounded-md transition-colors"
+              className="w-full bg-black hover:bg-yellow-500 text-white font-semibold py-2 px-4 rounded-md transition-colors"
               disabled={isLoading}
             >
               {isLoading ? 'Creating Account...' : 'Create Account'}
@@ -295,7 +298,7 @@ const SignUp = () => {
               Already have an account?{' '}
               <Link
                 to="/login"
-                className="text-primary-green font-medium hover:text-green-700 transition-colors"
+                className="text-primary-green font-medium hover:text-yellow-500 transition-colors"
               >
                 Sign in here
               </Link>

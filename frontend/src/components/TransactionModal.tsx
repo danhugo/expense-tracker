@@ -177,7 +177,7 @@ const TransactionModal = ({ isOpen, onClose, onSave, transaction }: TransactionM
             </button>
             <button
               type="submit"
-              className="flex-1 py-2 px-4 bg-primary-green text-white font-semibold rounded-md hover:bg-green-700 transition-colors"
+              className="flex-1 py-2 px-4 bg-primary-green text-white font-semibold rounded-md hover:bg-yellow-500 transition-colors"
             >
               {transaction ? 'Update' : 'Add'}
             </button>

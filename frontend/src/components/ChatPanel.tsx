@@ -86,14 +86,14 @@ const ChatPanel = ({ isOpen, onClose }: ChatPanelProps) => {
   return (
     <div className="fixed left-0 top-0 h-full w-80 bg-white shadow-2xl border-r border-gray-200 z-50 flex flex-col">
       {/* Header */}
-      <div className="flex items-center justify-between p-4 border-b bg-gradient-to-r from-primary-green to-green-600 text-white">
+      <div className="flex items-center justify-between p-4 border-b bg-black text-white">
         <div className="flex items-center space-x-3">
           <div className="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center">
             <Bot className="h-5 w-5" />
           </div>
           <div>
             <h3 className="font-semibold">Expense Assistant</h3>
-            <p className="text-sm text-green-100">AI-powered expense helper</p>
+            <p className="text-sm text-yellow-100">AI-powered expense helper</p>
           </div>
         </div>
         <Button

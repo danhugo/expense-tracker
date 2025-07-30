@@ -48,7 +48,7 @@ const Transactions = ({ onEditTransaction, onDeleteTransaction, onAddTransaction
           {/* Add Transaction Button - Primary action on this page */}
           <button
             onClick={onAddTransaction}
-            className="flex items-center px-6 py-3 bg-white/20 backdrop-blur-sm text-white font-semibold rounded-lg hover:bg-white/30 transform hover:scale-105 transition-all duration-200 shadow-lg border border-white/20 self-start sm:self-auto"
+            className="flex items-center px-6 py-3 bg-black/40 backdrop-blur-sm text-white font-semibold rounded-lg hover:bg-white/30 transform hover:scale-105 transition-all duration-200 shadow-lg border border-white/20 self-start sm:self-auto"
           >
             <Plus className="mr-2 h-5 w-5" />
             Add New Transaction

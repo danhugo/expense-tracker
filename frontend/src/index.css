@@ -56,7 +56,7 @@ All colors MUST be HSL.
     --sidebar-ring: 217.2 91.2% 59.8%;
 
     /* Custom colors for the expense manager */
-    --primary-green: 142 71% 45%;
+    --primary-green: 0 0% 0%;
     --accent-yellow: 45 93% 58%;
     --success: 142 71% 45%;
     --danger: 0 84% 60%;

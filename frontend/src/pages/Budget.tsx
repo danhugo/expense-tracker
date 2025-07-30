@@ -106,7 +106,7 @@ const Budget = () => {
               </div>
               <Button 
                 onClick={handleOverallBudgetSave}
-                className="mt-4 bg-primary-green hover:bg-green-700"
+                className="mt-4 bg-black hover:bg-yellow-500"
               >
                 Set Budget
               </Button>
@@ -208,7 +208,7 @@ const Budget = () => {
           
           <Button 
             onClick={handleCategoryBudgetSave}
-            className="w-full bg-primary-green hover:bg-green-700"
+            className="w-full bg-black hover:bg-yellow-500"
           >
             Save Category Budgets
           </Button>

@@ -27,9 +27,9 @@ export default {
 				background: 'hsl(var(--background))',
 				foreground: 'hsl(var(--foreground))',
 				primary: {
-					DEFAULT: '#059669',
+					DEFAULT: 'hsl(var(--primary-green))',
 					foreground: '#FFFFFF',
-					green: '#059669',
+					green: 'hsl(var(--primary-green))',
 				},
 				accent: {
 					DEFAULT: '#FBBF24',

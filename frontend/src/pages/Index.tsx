@@ -87,7 +87,7 @@ const Index = () => {
 
               {/* HUFI Logo - Stylized Text */}
               <NavLink to="/" className="flex items-center cursor-pointer hover:opacity-90 transition-opacity">
-                <div className="text-2xl font-bold bg-gradient-to-r from-primary-green to-green-600 bg-clip-text text-transparent">
+                <div className="text-2xl font-bold bg-gradient-to-r from-black to-yellow-400 bg-clip-text text-transparent">
                   HUFI
                 </div>
               </NavLink>

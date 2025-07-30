@@ -31,7 +31,7 @@ const Dashboard = ({ onEditTransaction, onDeleteTransaction, onAddTransaction }:
           </div>
           <button
             onClick={onAddTransaction}
-            className="flex items-center px-6 py-3 bg-white/20 backdrop-blur-sm text-white font-semibold rounded-lg hover:bg-white/30 transform hover:scale-105 transition-all duration-200 shadow-lg border border-white/20"
+            className="flex items-center px-6 py-3 bg-black/40 backdrop-blur-sm text-white font-semibold rounded-lg hover:bg-white/30 transform hover:scale-105 transition-all duration-200 shadow-lg border border-white/20"
           >
             <Plus className="mr-2 h-5 w-5" />
             <span className="hidden sm:inline">Add Transaction</span>

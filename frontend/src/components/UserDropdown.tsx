@@ -44,7 +44,7 @@ const UserDropdown = () => {
         {user?.profile_picture_url ? (
           <img src={user.profile_picture_url} alt="Profile" className="w-8 h-8 rounded-full object-cover" />
         ) : (
-          <div className="w-8 h-8 bg-gradient-to-r from-primary-green to-green-600 rounded-full flex items-center justify-center">
+          <div className="w-8 h-8 bg-black rounded-full flex items-center justify-center">
             <span className="text-white text-sm font-semibold">{user?.name?.charAt(0).toUpperCase() || ''}</span>
           </div>
         )}
@@ -57,7 +57,7 @@ const UserDropdown = () => {
           {/* Account Information Section */}
           <div className="p-4 border-b border-gray-100">
             <div className="flex items-center space-x-3">
-              <div className="w-12 h-12 bg-gradient-to-r from-primary-green to-green-600 rounded-full flex items-center justify-center">
+              <div className="w-12 h-12 bg-black rounded-full flex items-center justify-center">
                 <span className="text-white text-lg font-semibold">JD</span>
               </div>
               <div className="flex-1 min-w-0">
