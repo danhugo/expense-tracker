@@ -3,6 +3,7 @@ import { useState, useRef, useEffect } from 'react';
 import { User, Settings, LogOut, ChevronDown } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useUser } from '../contexts/UserContext';
+import UserAvatar from './UserAvatar';
 
 const UserDropdown = () => {
   const [isOpen, setIsOpen] = useState(false);
@@ -41,13 +42,11 @@ const UserDropdown = () => {
         onClick={() => setIsOpen(!isOpen)}
         className="flex items-center space-x-2 p-2 rounded-lg hover:bg-gray-100 transition-colors"
       >
-        {user?.profile_picture_url ? (
-          <img src={user.profile_picture_url} alt="Profile" className="w-8 h-8 rounded-full object-cover" />
-        ) : (
-          <div className="w-8 h-8 bg-black rounded-full flex items-center justify-center">
-            <span className="text-white text-sm font-semibold">{user?.name?.charAt(0).toUpperCase() || ''}</span>
-          </div>
-        )}
+        <UserAvatar 
+          profilePictureUrl={user?.profile_picture_url} 
+          name={user?.name} 
+          size="sm" 
+        />
         <ChevronDown className={`h-4 w-4 text-gray-600 transition-transform ${isOpen ? 'rotate-180' : ''}`} />
       </button>
 
@@ -57,13 +56,11 @@ const UserDropdown = () => {
           {/* Account Information Section */}
           <div className="p-4 border-b border-gray-100">
             <div className="flex items-center space-x-3">
-              {user?.profile_picture_url ? (
-                <img src={user.profile_picture_url} alt="Profile" className="w-8 h-8 rounded-full object-cover" />
-              ) : (
-                <div className="w-8 h-8 bg-black rounded-full flex items-center justify-center">
-                  <span className="text-white text-sm font-semibold">{user?.name?.charAt(0).toUpperCase() || ''}</span>
-                </div>
-              )}
+              <UserAvatar 
+                profilePictureUrl={user?.profile_picture_url} 
+                name={user?.name} 
+                size="sm" 
+              />
               <div className="flex-1 min-w-0">
                 <p className="text-sm font-semibold text-gray-900 truncate">{user?.name}</p>
                 <p className="text-xs text-gray-600 truncate">{user?.email}</p>

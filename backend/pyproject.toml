@@ -19,6 +19,7 @@ dependencies = [
     "httpx>=0.28.1",
     "google-auth",
     "google-auth-oauthlib",
+    "python-multipart==0.0.20",
 ]
 
 [tool.setuptools]

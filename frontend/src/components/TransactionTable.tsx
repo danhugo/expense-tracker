@@ -1,6 +1,8 @@
 
 import { Transaction } from '../types/transaction';
 import { Edit, Trash2 } from 'lucide-react';
+import { useUser } from '../contexts/UserContext';
+import { formatCurrency } from '../utils/formatters';
 
 interface TransactionTableProps {
   transactions: Transaction[];
@@ -9,6 +11,8 @@ interface TransactionTableProps {
 }
 
 const TransactionTable = ({ transactions, onEdit, onDelete }: TransactionTableProps) => {
+  const { user } = useUser();
+  
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString('en-US', {
       month: 'short',
@@ -55,7 +59,8 @@ const TransactionTable = ({ transactions, onEdit, onDelete }: TransactionTablePr
                 <td className={`py-3 px-4 text-right font-medium ${
                   transaction.type === 'income' ? 'text-success' : 'text-danger'
                 }`}>
-                  {transaction.type === 'income' ? '+' : '-'}${transaction.amount.toFixed(2)}
+                  {transaction.type === 'income' ? '+' : '-'}
+                  {formatCurrency(transaction.amount, user?.currency_symbol || '$', user?.currency || 'USD')}
                 </td>
                 <td className="py-3 px-4 text-right">
                   <div className="flex justify-end space-x-2">

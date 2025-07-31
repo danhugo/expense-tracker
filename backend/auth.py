@@ -15,7 +15,7 @@ import os
 load_dotenv()
 
 # Secret key to sign JWT tokens
-SECRET_KEY = os.getenv("SECRET_KEY")  # TODO: Change this to a strong random key and load from environment variable
+SECRET_KEY = os.getenv("SECRET_KEY", "your-secret-key-here-change-in-production")
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 30
 

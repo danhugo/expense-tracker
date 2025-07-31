@@ -1,12 +1,21 @@
 import logging
 from logging.config import fileConfig
+import os
+from dotenv import load_dotenv
 
 from alembic import context
 from sqlalchemy import engine_from_config, pool
 
+# Load environment variables
+load_dotenv()
+
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.
 config = context.config
+
+# Override the sqlalchemy.url from the environment variable
+database_url = os.getenv("DATABASE_URL", "postgresql://expense_user:expense_password@localhost:5433/expense_tracker_db")
+config.set_main_option("sqlalchemy.url", database_url)
 
 # Interpret the config file for Python logging.
 # This line sets up loggers basically.

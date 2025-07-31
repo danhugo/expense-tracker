@@ -1,7 +1,8 @@
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Plus } from 'lucide-react';
 import TransactionTable from '../components/TransactionTable';
+import Pagination from '../components/Pagination';
 import { useTransactions } from '../hooks/useTransactions';
 import { Transaction } from '../types/transaction';
 
@@ -12,28 +13,60 @@ interface TransactionsProps {
 }
 
 const Transactions = ({ onEditTransaction, onDeleteTransaction, onAddTransaction }: TransactionsProps) => {
-  const { transactions } = useTransactions();
+  const { 
+    transactions, 
+    loading,
+    fetchTransactionsPaginated,
+    currentPage,
+    pageSize,
+    totalPages,
+    totalTransactions,
+    setPageSize,
+    setCurrentPage
+  } = useTransactions({ autoFetch: false });
+  
   const [filterType, setFilterType] = useState<'all' | 'income' | 'expense'>('all');
   const [sortBy, setSortBy] = useState<'date' | 'amount'>('date');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
+  
+  // Reset to first page when filters change
+  const handleFilterTypeChange = (value: 'all' | 'income' | 'expense') => {
+    setFilterType(value);
+    setCurrentPage(1);
+  };
+  
+  const handleSortByChange = (value: 'date' | 'amount') => {
+    setSortBy(value);
+    setCurrentPage(1);
+  };
+  
+  const handleSortOrderChange = (value: 'asc' | 'desc') => {
+    setSortOrder(value);
+    setCurrentPage(1);
+  };
 
-  // Filter and sort transactions
-  const filteredAndSortedTransactions = transactions
-    .filter(transaction => {
-      if (filterType === 'all') return true;
-      return transaction.type === filterType;
-    })
-    .sort((a, b) => {
-      let comparison = 0;
-      
-      if (sortBy === 'date') {
-        comparison = new Date(a.date).getTime() - new Date(b.date).getTime();
-      } else if (sortBy === 'amount') {
-        comparison = a.amount - b.amount;
-      }
-      
-      return sortOrder === 'asc' ? comparison : -comparison;
-    });
+  // Fetch transactions when filters or pagination changes
+  useEffect(() => {
+    const filter: any = {
+      sort_by: sortBy,
+      sort_order: sortOrder,
+    };
+    
+    if (filterType !== 'all') {
+      filter.type = filterType;
+    }
+    
+    fetchTransactionsPaginated(currentPage, filter);
+  }, [filterType, sortBy, sortOrder, currentPage, pageSize, fetchTransactionsPaginated]);
+  
+  const handlePageChange = (page: number) => {
+    setCurrentPage(page);
+  };
+  
+  const handlePageSizeChange = (size: number) => {
+    setPageSize(size);
+    setCurrentPage(1); // Reset to first page when changing page size
+  };
 
   return (
     <div className="space-y-6">
@@ -65,7 +98,7 @@ const Transactions = ({ onEditTransaction, onDeleteTransaction, onAddTransaction
               <label className="text-sm font-medium text-gray-700">Filter:</label>
               <select
                 value={filterType}
-                onChange={(e) => setFilterType(e.target.value as 'all' | 'income' | 'expense')}
+                onChange={(e) => handleFilterTypeChange(e.target.value as 'all' | 'income' | 'expense')}
                 className="py-1 px-2 border border-gray-300 rounded-md bg-white text-gray-700 text-sm focus:ring-2 focus:ring-primary-green focus:border-primary-green"
               >
                 <option value="all">All Types</option>
@@ -79,7 +112,7 @@ const Transactions = ({ onEditTransaction, onDeleteTransaction, onAddTransaction
               <label className="text-sm font-medium text-gray-700">Sort by:</label>
               <select
                 value={sortBy}
-                onChange={(e) => setSortBy(e.target.value as 'date' | 'amount')}
+                onChange={(e) => handleSortByChange(e.target.value as 'date' | 'amount')}
                 className="py-1 px-2 border border-gray-300 rounded-md bg-white text-gray-700 text-sm focus:ring-2 focus:ring-primary-green focus:border-primary-green"
               >
                 <option value="date">Date</option>
@@ -87,7 +120,7 @@ const Transactions = ({ onEditTransaction, onDeleteTransaction, onAddTransaction
               </select>
               <select
                 value={sortOrder}
-                onChange={(e) => setSortOrder(e.target.value as 'asc' | 'desc')}
+                onChange={(e) => handleSortOrderChange(e.target.value as 'asc' | 'desc')}
                 className="py-1 px-2 border border-gray-300 rounded-md bg-white text-gray-700 text-sm focus:ring-2 focus:ring-primary-green focus:border-primary-green"
               >
                 <option value="desc">Newest First</option>
@@ -98,17 +131,39 @@ const Transactions = ({ onEditTransaction, onDeleteTransaction, onAddTransaction
 
           {/* Transaction Count */}
           <div className="text-sm text-gray-500">
-            {filteredAndSortedTransactions.length} transaction{filteredAndSortedTransactions.length !== 1 ? 's' : ''}
+            {totalTransactions} transaction{totalTransactions !== 1 ? 's' : ''}
           </div>
         </div>
       </div>
 
       {/* Transactions Table */}
-      <TransactionTable 
-        transactions={filteredAndSortedTransactions}
-        onEdit={onEditTransaction}
-        onDelete={onDeleteTransaction}
-      />
+      {loading ? (
+        <div className="bg-white p-8 rounded-lg shadow-sm border border-gray-200">
+          <div className="flex justify-center">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-green"></div>
+          </div>
+        </div>
+      ) : (
+        <>
+          <TransactionTable 
+            transactions={transactions}
+            onEdit={onEditTransaction}
+            onDelete={onDeleteTransaction}
+          />
+          
+          {/* Pagination */}
+          {totalTransactions > 0 && (
+            <Pagination
+              currentPage={currentPage}
+              totalPages={totalPages}
+              onPageChange={handlePageChange}
+              pageSize={pageSize}
+              totalItems={totalTransactions}
+              onPageSizeChange={handlePageSizeChange}
+            />
+          )}
+        </>
+      )}
     </div>
   );
 };

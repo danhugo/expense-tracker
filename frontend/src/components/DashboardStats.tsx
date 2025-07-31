@@ -1,11 +1,15 @@
 
 import { DashboardStats as StatsType } from '../types/transaction';
+import { useUser } from '../contexts/UserContext';
+import { formatCurrency } from '../utils/formatters';
 
 interface DashboardStatsProps {
   stats: StatsType;
 }
 
 const DashboardStats = ({ stats }: DashboardStatsProps) => {
+  const { user } = useUser();
+  
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
       {/* Total Balance */}
@@ -16,7 +20,7 @@ const DashboardStats = ({ stats }: DashboardStatsProps) => {
       }`}>
         <div className="text-sm font-medium text-gray-600 mb-2">Total Balance</div>
         <div className={`text-xl lg:text-2xl font-bold break-words ${stats.totalBalance >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-          {stats.totalBalance >= 0 ? '+' : '-'}${Math.abs(stats.totalBalance).toLocaleString('en-US', { minimumFractionDigits: 2 })}
+          {stats.totalBalance >= 0 ? '+' : '-'}{formatCurrency(Math.abs(stats.totalBalance), user?.currency_symbol || '$', user?.currency || 'USD')}
         </div>
         {stats.totalBalance >= 0 && (
           <div className="w-2 h-2 bg-green-500 rounded-full mt-2"></div>
@@ -30,7 +34,7 @@ const DashboardStats = ({ stats }: DashboardStatsProps) => {
       <div className="bg-white p-4 rounded-lg shadow-sm border border-green-200 hover:border-green-300 transform hover:scale-105 transition-all duration-300">
         <div className="text-sm font-medium text-gray-600 mb-2">Monthly Income</div>
         <div className="text-xl lg:text-2xl font-bold text-green-600 break-words">
-          +${stats.monthlyIncome.toLocaleString('en-US', { minimumFractionDigits: 2 })}
+          +{formatCurrency(stats.monthlyIncome, user?.currency_symbol || '$', user?.currency || 'USD')}
         </div>
         <div className="w-2 h-2 bg-green-500 rounded-full mt-2"></div>
       </div>
@@ -39,7 +43,7 @@ const DashboardStats = ({ stats }: DashboardStatsProps) => {
       <div className="bg-white p-4 rounded-lg shadow-sm border border-yellow-200 hover:border-yellow-300 transform hover:scale-105 transition-all duration-300">
         <div className="text-sm font-medium text-gray-600 mb-2">Monthly Expenses</div>
         <div className="text-xl lg:text-2xl font-bold text-yellow-600 break-words">
-          -${stats.monthlyExpenses.toLocaleString('en-US', { minimumFractionDigits: 2 })}
+          -{formatCurrency(stats.monthlyExpenses, user?.currency_symbol || '$', user?.currency || 'USD')}
         </div>
         <div className="w-2 h-2 bg-yellow-500 rounded-full mt-2"></div>
       </div>

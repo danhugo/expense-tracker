@@ -12,6 +12,7 @@ import Transactions from './Transactions';
 import Settings from './Settings';
 import Budget from './Budget';
 import RecurringTransactions from './RecurringTransactions';
+import Categories from './Categories';
 import { useTransactions } from '../hooks/useTransactions';
 import { useSidebarState } from '../hooks/useSidebarState';
 import { Transaction } from '../types/transaction';
@@ -129,8 +130,12 @@ const Index = () => {
               <Route path="/settings" element={<Settings />} />
               <Route path="/budget" element={<Budget />} />
               <Route path="/recurring" element={<RecurringTransactions />} />
-
-              {/* 404 route last */}
+              <Route path="/categories" element={<Categories />} />
+              
+              {/* Redirect /404 to NotFound within app layout */}
+              <Route path="/404" element={<NotFound />} />
+              
+              {/* Catch all undefined routes - must be last */}
               <Route path="*" element={<NotFound />} />
             </Routes>
           </div>

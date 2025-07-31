@@ -9,6 +9,10 @@ import { Button } from '../components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../components/ui/select';
 import { Alert, AlertDescription } from '../components/ui/alert';
 import { Progress } from '../components/ui/progress';
+import UserAvatar from '../components/UserAvatar';
+import CurrencyPreviewModal from '../components/CurrencyPreviewModal';
+import { API_BASE_URL } from '../config';
+import { transactionEventBus } from '../utils/eventBus';
 
 const Settings = () => {
   const { user, setUser } = useUser();
@@ -27,8 +31,51 @@ const Settings = () => {
     confirmPassword: ''
   });
 
-  const [currency, setCurrency] = useState('USD');
+  const [currency, setCurrency] = useState(user?.currency || 'USD');
+  const [currencies, setCurrencies] = useState<any[]>([]);
   const [feedback, setFeedback] = useState({ type: '', message: '' });
+  const [showCurrencyPreview, setShowCurrencyPreview] = useState(false);
+  const [selectedCurrency, setSelectedCurrency] = useState('');
+  const [conversionHistory, setConversionHistory] = useState<any[]>([]);
+
+  useEffect(() => {
+    // Update currency when user changes
+    if (user?.currency) {
+      setCurrency(user.currency);
+    }
+  }, [user]);
+
+  useEffect(() => {
+    // Fetch available currencies
+    fetch(`${API_BASE_URL}/currencies`)
+      .then(res => res.json())
+      .then(data => setCurrencies(data))
+      .catch(err => console.error('Failed to fetch currencies:', err));
+  }, []);
+
+  useEffect(() => {
+    // Fetch conversion history
+    const fetchHistory = async () => {
+      const token = localStorage.getItem('accessToken');
+      if (!token) return;
+      
+      try {
+        const res = await fetch(`${API_BASE_URL}/currency/history`, {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+          },
+        });
+        if (res.ok) {
+          const data = await res.json();
+          setConversionHistory(data);
+        }
+      } catch (err) {
+        console.error('Failed to fetch conversion history:', err);
+      }
+    };
+    
+    fetchHistory();
+  }, []);
 
   const getPasswordStrength = (password: string) => {
     if (password.length < 4) return { strength: 0, label: 'Weak', color: 'bg-red-500' };
@@ -144,9 +191,26 @@ const Settings = () => {
     setTimeout(() => setFeedback({ type: '', message: '' }), 3000);
   };
 
-  const handleCurrencySave = () => {
-    setFeedback({ type: 'success', message: 'Currency preference saved!' });
-    setTimeout(() => setFeedback({ type: '', message: '' }), 3000);
+  const handleCurrencyPreview = () => {
+    if (currency === user?.currency) {
+      setFeedback({ type: 'error', message: 'Please select a different currency.' });
+      setTimeout(() => setFeedback({ type: '', message: '' }), 3000);
+      return;
+    }
+    setSelectedCurrency(currency);
+    setShowCurrencyPreview(true);
+  };
+
+  const handleCurrencyConfirm = async () => {
+    // This will be called after successful conversion
+    // The conversion process will update the user's currency
+    setFeedback({ type: 'success', message: 'Currency conversion completed successfully!' });
+    
+    // Small delay to ensure all data is updated
+    setTimeout(() => {
+      transactionEventBus.emit('transactionUpdated');
+      window.location.reload();
+    }, 1000);
   };
 
   const passwordStrength = getPasswordStrength(passwordData.newPassword);
@@ -170,10 +234,11 @@ const Settings = () => {
 
       {/* Settings Tabs */}
       <Tabs defaultValue="personal" className="w-full">
-        <TabsList className="grid w-full grid-cols-3">
+        <TabsList className="grid w-full grid-cols-4">
           <TabsTrigger value="personal">Personal Settings</TabsTrigger>
           <TabsTrigger value="security">Security Settings</TabsTrigger>
           <TabsTrigger value="currency">Currency Settings</TabsTrigger>
+          <TabsTrigger value="history">Conversion History</TabsTrigger>
         </TabsList>
 
         {/* Personal Settings */}
@@ -208,14 +273,12 @@ const Settings = () => {
                   {/* Show preview if a new image is selected, else show current profile picture */}
                   {previewPictureUrl ? (
                     <img src={previewPictureUrl} alt="Preview" className="w-16 h-16 rounded-full object-cover border-2 border-primary-green" />
-                  ) : user?.profile_picture_url ? (
-                    <img src={user.profile_picture_url} alt="Profile" className="w-16 h-16 rounded-full object-cover" />
                   ) : (
-                    <div className="w-16 h-16 bg-gray-200 rounded-full flex items-center justify-center">
-                      <span className="text-gray-500 text-2xl font-semibold">
-                        {personalInfo.name.charAt(0)}
-                      </span>
-                    </div>
+                    <UserAvatar 
+                      profilePictureUrl={user?.profile_picture_url} 
+                      name={personalInfo.name || user?.name} 
+                      size="lg" 
+                    />
                   )}
                   <input
                     type="file"
@@ -319,23 +382,88 @@ const Settings = () => {
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="USD">USD - US Dollar</SelectItem>
-                    <SelectItem value="EUR">EUR - Euro</SelectItem>
-                    <SelectItem value="GBP">GBP - British Pound</SelectItem>
-                    <SelectItem value="JPY">JPY - Japanese Yen</SelectItem>
-                    <SelectItem value="KRW">KRW - Korean Won</SelectItem>
-                    <SelectItem value="CAD">CAD - Canadian Dollar</SelectItem>
-                    <SelectItem value="AUD">AUD - Australian Dollar</SelectItem>
+                    {currencies.map((curr) => (
+                      <SelectItem key={curr.code} value={curr.code}>
+                        {curr.symbol} {curr.code} - {curr.name}
+                      </SelectItem>
+                    ))}
                   </SelectContent>
                 </Select>
               </div>
-              <Button onClick={handleCurrencySave} className="bg-black hover:bg-yellow-500">
-                Save Currency
+              <Button 
+                onClick={handleCurrencyPreview} 
+                className="bg-black hover:bg-yellow-500"
+                disabled={currency === user?.currency}
+              >
+                Preview Currency Change
               </Button>
             </CardContent>
           </Card>
         </TabsContent>
+
+        {/* Conversion History */}
+        <TabsContent value="history">
+          <Card>
+            <CardHeader>
+              <CardTitle>Currency Conversion History</CardTitle>
+            </CardHeader>
+            <CardContent>
+              {conversionHistory.length === 0 ? (
+                <p className="text-gray-500 text-center py-8">No conversion history available</p>
+              ) : (
+                <div className="space-y-4">
+                  {conversionHistory.map((conversion) => (
+                    <div key={conversion.id} className="border rounded-lg p-4 bg-gray-50">
+                      <div className="flex justify-between items-start">
+                        <div>
+                          <p className="font-medium">
+                            {conversion.from_currency} → {conversion.to_currency}
+                          </p>
+                          <p className="text-sm text-gray-600">
+                            Rate: 1 {conversion.from_currency} = {conversion.exchange_rate.toFixed(4)} {conversion.to_currency}
+                          </p>
+                          <p className="text-sm text-gray-500">
+                            {new Date(conversion.created_at).toLocaleString()}
+                          </p>
+                        </div>
+                        <div className="text-right">
+                          <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                            conversion.status === 'completed' ? 'bg-green-100 text-green-800' :
+                            conversion.status === 'processing' ? 'bg-yellow-100 text-yellow-800' :
+                            conversion.status === 'failed' ? 'bg-red-100 text-red-800' :
+                            'bg-gray-100 text-gray-800'
+                          }`}>
+                            {conversion.status}
+                          </span>
+                          {conversion.revertable && (
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              className="mt-2"
+                              onClick={() => {/* TODO: Implement revert */}}
+                            >
+                              Revert
+                            </Button>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </TabsContent>
       </Tabs>
+
+      {/* Currency Preview Modal */}
+      <CurrencyPreviewModal
+        isOpen={showCurrencyPreview}
+        onClose={() => setShowCurrencyPreview(false)}
+        fromCurrency={user?.currency || 'USD'}
+        toCurrency={selectedCurrency}
+        onConfirm={handleCurrencyConfirm}
+      />
     </div>
   );
 };

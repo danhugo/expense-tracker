@@ -1,17 +1,36 @@
 
 import { useState, useEffect } from 'react';
-
-declare const google: typeof window.google;
 import { useNavigate, Link } from 'react-router-dom';
 import { useUser } from '../contexts/UserContext';
+import { useNotifications } from '../hooks/useNotifications';
 import { Button } from '../components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../components/ui/card';
 import { Input } from '../components/ui/input';
 import { Label } from '../components/ui/label';
 import { Separator } from '../components/ui/separator';
-import ErrorNotification from '../components/ErrorNotification';
 import {Eye, EyeOff} from 'lucide-react';
 import IntricateDiamond from '@/components/Diamond';
+
+// Google Identity Services types
+interface GoogleCredentialResponse {
+  credential: string;
+  select_by?: string;
+  clientId?: string;
+}
+
+declare global {
+  interface Window {
+    google: {
+      accounts: {
+        id: {
+          initialize: (config: any) => void;
+          renderButton: (element: HTMLElement, config: any) => void;
+          prompt: () => void;
+        };
+      };
+    };
+  }
+}
 
 const Login = () => {
   const [email, setEmail] = useState('');
@@ -19,16 +38,13 @@ const Login = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [isGoogleLoading, setIsGoogleLoading] = useState(false);
-  const [errorMessage, setErrorMessage] = useState('');
-  const [isGoogleAccountError, setIsGoogleAccountError] = useState(false);
   const navigate = useNavigate();
   const { setUser } = useUser();
+  const { addNotification } = useNotifications();
 
   const handleLogin = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setIsLoading(true);
-    setErrorMessage('');
-    setIsGoogleAccountError(false);
 
     try {
       const res = await fetch('http://localhost:8060/login', {
@@ -56,6 +72,7 @@ const Login = () => {
       if (userRes.ok) {
         const userData = await userRes.json();
         setUser(userData);
+        addNotification('success', 'Login successful! Welcome back.');
       } else {
         console.error('Failed to fetch user data');
       }
@@ -64,17 +81,16 @@ const Login = () => {
       const message = (error as Error).message;
       console.error('Login error:', message);
       if (message.includes('created with Google')) {
-        setErrorMessage('It looks like your account was created with Google. Please continue with Google to sign in.');
-        setIsGoogleAccountError(true);
+        addNotification('warning', 'It looks like your account was created with Google. Please continue with Google to sign in.');
       } else {
-        setErrorMessage(message);
+        addNotification('error', message);
       }
     } finally {
       setIsLoading(false);
     }
   };
 
-  const handleGoogleLogin = async (response: unknown) => {
+  const handleGoogleLogin = async (response: GoogleCredentialResponse) => {
     setIsGoogleLoading(true);
     try {
       console.log('Google Auth Response:', response);
@@ -104,15 +120,14 @@ const Login = () => {
       if (userRes.ok) {
         const userData = await userRes.json();
         setUser(userData);
-        setErrorMessage(''); // Clear any previous errors
-        setIsGoogleAccountError(false);
+        addNotification('success', 'Google login successful! Welcome back.');
       } else {
         console.error('Failed to fetch user data');
       }
       navigate('/');
     } catch (error: unknown) {
       console.error('Google login error:', (error as Error).message);
-      setErrorMessage((error as Error).message);
+      addNotification('error', (error as Error).message);
     } finally {
       setIsGoogleLoading(false);
     }
@@ -121,14 +136,14 @@ const Login = () => {
   useEffect(() => {
     const renderGoogleButton = (id: string) => {
       if (document.getElementById(id)) {
-        google.accounts.id.renderButton(
+        window.google.accounts.id.renderButton(
           document.getElementById(id)!,
           { theme: 'outline', size: 'large', width: '100%' }
         );
       }
     };
 
-    google.accounts.id.initialize({
+    window.google.accounts.id.initialize({
       client_id: import.meta.env.VITE_GOOGLE_CLIENT_ID,
       callback: handleGoogleLogin,
       ux_mode: 'popup',
@@ -136,11 +151,7 @@ const Login = () => {
 
     renderGoogleButton('google-sign-in-button');
 
-    if (isGoogleAccountError) {
-      renderGoogleButton('google-sign-in-button-error');
-    }
-
-  }, [isGoogleAccountError, handleGoogleLogin]);
+  }, [handleGoogleLogin]);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-primary-green/10 to-accent-yellow/10 flex items-center justify-center p-4">
@@ -159,12 +170,6 @@ const Login = () => {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <ErrorNotification 
-            message={errorMessage}
-            isGoogleError={isGoogleAccountError}
-            onDismiss={() => setErrorMessage('')}
-            googleSignInId="google-sign-in-button-error"
-          />
           <form onSubmit={handleLogin} className="space-y-6">
             <div className="space-y-2">
               <Label htmlFor="email" className="text-sm font-medium text-gray-700">
@@ -207,7 +212,7 @@ const Login = () => {
             <Button
               type="submit"
               className="w-full bg-black hover:bg-yellow-500 text-white font-semibold py-2 px-4 rounded-md transition-colors"
-              disabled={isLoading || isGoogleAccountError}
+              disabled={isLoading}
             >
               {isLoading ? 'Signing In...' : 'Sign In'}
             </Button>
@@ -222,20 +227,18 @@ const Login = () => {
             </div>
 
             {/* Google Sign In Button Wrapper */}
-            {!isGoogleAccountError && (
-              <div className="w-full mt-4 relative">
-                {/* Overlay to disable button while loading */}
-                {isGoogleLoading && (
-                  <div className="absolute inset-0 bg-white bg-opacity-80 flex items-center justify-center z-10 rounded">
-                    <span className="text-primary-green font-semibold">Signing in...</span>
-                  </div>
-                )}
-                <div
-                  id="google-sign-in-button"
-                  className={`w-full ${isGoogleLoading ? 'pointer-events-none opacity-60' : ''}`}
-                ></div>
-              </div>
-            )}
+            <div className="w-full mt-4 relative">
+              {/* Overlay to disable button while loading */}
+              {isGoogleLoading && (
+                <div className="absolute inset-0 bg-white bg-opacity-80 flex items-center justify-center z-10 rounded">
+                  <span className="text-primary-green font-semibold">Signing in...</span>
+                </div>
+              )}
+              <div
+                id="google-sign-in-button"
+                className={`w-full ${isGoogleLoading ? 'pointer-events-none opacity-60' : ''}`}
+              ></div>
+            </div>
           </div>
 
           <div className="mt-6 text-center">

@@ -1,8 +1,11 @@
 // components/TransactionModal.tsx
 import React, { useState, useEffect } from 'react';
 import { X } from 'lucide-react';
-import { Transaction } from '../types/transaction';
+import axios from 'axios';
+import { Transaction, Category } from '../types/transaction';
 import { useTransactions } from '../hooks/useTransactions'; // Import the hook
+import { useUser } from '../contexts/UserContext';
+import { API_BASE_URL } from '../config';
 
 interface TransactionModalProps {
   isOpen: boolean;
@@ -10,24 +13,13 @@ interface TransactionModalProps {
   transaction?: Transaction; // `transaction` prop for editing
 }
 
-const categories = [
-  'Food & Dining',
-  'Shopping',
-  'Transportation',
-  'Bills & Utilities',
-  'Entertainment',
-  'Healthcare',
-  'Travel',
-  'Education',
-  'Salary',
-  'Investment',
-  'Other'
-];
-
 const TransactionModal = ({ isOpen, onClose, transaction }: TransactionModalProps) => {
   const { addTransaction, updateTransaction } = useTransactions(); // Use the hook here
+  const { user } = useUser();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [categories, setCategories] = useState<Category[]>([]);
+  const [loadingCategories, setLoadingCategories] = useState(false);
 
   const [formData, setFormData] = useState({
     amount: '',
@@ -39,14 +31,51 @@ const TransactionModal = ({ isOpen, onClose, transaction }: TransactionModalProp
 
   const isEditing = !!transaction; // Determine if it's an edit operation
 
+  // Fetch categories when modal opens
+  useEffect(() => {
+    if (isOpen) {
+      fetchCategories();
+    }
+  }, [isOpen, formData.type]);
+
+  const fetchCategories = async () => {
+    setLoadingCategories(true);
+    try {
+      const api = axios.create({
+        baseURL: API_BASE_URL,
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('accessToken')}`,
+        },
+      });
+      
+      console.log('Fetching categories for type:', formData.type);
+      const response = await api.get(`/categories/?category_type=${formData.type}`);
+      console.log('Categories received:', response.data);
+      setCategories(response.data);
+      
+      // Initialize default categories if none exist
+      if (response.data.length === 0) {
+        await api.post('/categories/initialize-defaults');
+        const newResponse = await api.get(`/categories/?category_type=${formData.type}`);
+        setCategories(newResponse.data);
+      }
+    } catch (error) {
+      console.error('Error fetching categories:', error);
+    } finally {
+      setLoadingCategories(false);
+    }
+  };
+
   useEffect(() => {
     if (transaction) {
+      // Format the date to YYYY-MM-DD for the HTML date input
+      const formattedDate = transaction.date.split('T')[0];
       setFormData({
         amount: transaction.amount.toString(),
         type: transaction.type,
         category: transaction.category,
         description: transaction.description || '', // Ensure description is not undefined
-        date: transaction.date,
+        date: formattedDate,
       });
     } else {
       // Reset form for new transaction
@@ -84,11 +113,9 @@ const TransactionModal = ({ isOpen, onClose, transaction }: TransactionModalProp
       if (isEditing && transaction) {
         // Call update API
         await updateTransaction(transaction.id, transactionData);
-        alert('Transaction updated successfully!');
       } else {
         // Call add API
         await addTransaction(transactionData);
-        alert('Transaction added successfully!');
       }
       onClose(); // Close modal on successful save
     } catch (err: any) {
@@ -124,18 +151,23 @@ const TransactionModal = ({ isOpen, onClose, transaction }: TransactionModalProp
           {/* Amount */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
-              Amount
+              Amount ({user?.currency || 'USD'})
             </label>
-            <input
-              type="number"
-              step="0.01"
-              value={formData.amount}
-              onChange={(e) => setFormData({ ...formData, amount: e.target.value })}
-              className="w-full py-2 px-3 border border-gray-300 rounded-md bg-white text-gray-700 focus:ring-2 focus:ring-primary-green focus:border-primary-green"
-              placeholder="0.00"
-              required
-              disabled={loading}
-            />
+            <div className="relative">
+              <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500">
+                {user?.currency_symbol || '$'}
+              </span>
+              <input
+                type="number"
+                step="0.01"
+                value={formData.amount}
+                onChange={(e) => setFormData({ ...formData, amount: e.target.value })}
+                className="w-full py-2 pl-8 pr-3 border border-gray-300 rounded-md bg-white text-gray-700 focus:ring-2 focus:ring-primary-green focus:border-primary-green"
+                placeholder="0.00"
+                required
+                disabled={loading}
+              />
+            </div>
           </div>
 
           {/* Type */}
@@ -145,7 +177,11 @@ const TransactionModal = ({ isOpen, onClose, transaction }: TransactionModalProp
             </label>
             <select
               value={formData.type}
-              onChange={(e) => setFormData({ ...formData, type: e.target.value as 'income' | 'expense' })}
+              onChange={(e) => {
+                const newType = e.target.value as 'income' | 'expense';
+                // Clear category when changing type
+                setFormData({ ...formData, type: newType, category: '' });
+              }}
               className="w-full py-2 px-3 border border-gray-300 rounded-md bg-white text-gray-700 focus:ring-2 focus:ring-primary-green focus:border-primary-green"
               disabled={loading}
             >
@@ -164,12 +200,14 @@ const TransactionModal = ({ isOpen, onClose, transaction }: TransactionModalProp
               onChange={(e) => setFormData({ ...formData, category: e.target.value })}
               className="w-full py-2 px-3 border border-gray-300 rounded-md bg-white text-gray-700 focus:ring-2 focus:ring-primary-green focus:border-primary-green"
               required
-              disabled={loading}
+              disabled={loading || loadingCategories}
             >
-              <option value="">Select category</option>
+              <option value="">
+                {loadingCategories ? 'Loading categories...' : 'Select category'}
+              </option>
               {categories.map((category) => (
-                <option key={category} value={category}>
-                  {category}
+                <option key={category.id} value={category.name}>
+                  {category.icon && `${category.icon} `}{category.name}
                 </option>
               ))}
             </select>
