@@ -4,12 +4,26 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-HUFI Expense Tracker - a full-stack personal finance management application with React frontend and Python FastAPI backend.
+HUFI Expense Tracker - a comprehensive personal finance management application with advanced features for expense tracking, budgeting, and financial insights.
 
-## Common Development Commands
+### Key Features
+- Multi-currency support with real-time conversion
+- Category management with custom icons and colors
+- Budget tracking and alerts
+- Transaction analytics and insights
+- Google OAuth integration
+- Profile customization with avatar uploads
+- Recurring transactions
+- CSV import/export
+- Dark mode support (planned)
+
+## Quick Start Commands
 
 ### Frontend (from `/frontend` directory)
 ```bash
+# Install dependencies
+npm install
+
 # Development server (port 8080)
 npm run dev
 
@@ -34,6 +48,9 @@ python app.py
 # Database migrations
 alembic upgrade head
 alembic revision --autogenerate -m "description"
+
+# Create .env file from example
+cp .env.example .env
 ```
 
 ## Architecture Overview
@@ -43,262 +60,343 @@ alembic revision --autogenerate -m "description"
 - **Backend**: Python FastAPI + SQLAlchemy + PostgreSQL
 - **Database**: PostgreSQL on localhost:5433
 - **Auth**: JWT tokens + Google OAuth
+- **State Management**: React Context API + Custom hooks
+- **UI Components**: shadcn/ui (Radix UI + Tailwind)
+- **Notifications**: Custom notification system with toast support
+- **File Storage**: Local/S3 compatible (configurable)
 
-### Key Architectural Patterns
+### Environment Variables
 
-#### Frontend Architecture
-- **State Management**: React Context API + Custom hooks pattern
-  - `UserContext` for authentication state
-  - `useTransactions` hook for transaction data management
-  - Local state for UI components
-- **Routing**: React Router with protected routes
-- **API Communication**: Axios with centralized configuration in `config.ts`
-- **Component Structure**: 
-  - Pages in `/src/pages/`
-  - Reusable components in `/src/components/`
-  - UI primitives from shadcn/ui in `/src/components/ui/`
-
-#### Backend Architecture
-- **API Structure**: Route-based organization in `/routers/`
-  - `auth_router.py`: Authentication endpoints
-  - `transactions.py`: Transaction CRUD operations
-  - `users.py`: User management
-- **Database Models**: SQLAlchemy models in `models.py`
-  - User model with password hashing
-  - Transaction model with user relationships
-- **Authentication**: JWT implementation in `auth.py`
-  - Access token generation
-  - Password hashing with bcrypt
-  - Protected route decorators
-
-### API Endpoints
-
-Base URL: `http://localhost:8060`
-
-Key endpoints:
-- `POST /users/signup` - User registration
-- `POST /users/login` - User login
-- `GET /users/profile` - Get user profile (protected)
-- `GET /transactions/` - List transactions (protected)
-- `POST /transactions/` - Create transaction (protected)
-- `PUT /transactions/{id}` - Update transaction (protected)
-- `DELETE /transactions/{id}` - Delete transaction (protected)
-
-### Database Schema
-
-**Users Table**:
-- id (UUID primary key)
-- email (unique)
-- password_hash
-- full_name
-- profile_picture
-
-**Transactions Table**:
-- id (UUID primary key)
-- user_id (foreign key)
-- description
-- amount
-- category
-- date
-- created_at
-- updated_at
-
-## Development Tips
-
-1. **Frontend API Configuration**: Update `API_BASE_URL` in `/frontend/src/config.ts` based on environment
-
-2. **Database Migrations**: Always create migrations when modifying models:
-   ```bash
-   cd backend
-   alembic revision --autogenerate -m "your migration message"
-   alembic upgrade head
-   ```
-
-3. **Type Safety**: Frontend uses TypeScript - maintain type definitions in `/frontend/src/types/`
-
-4. **Component Development**: Use existing shadcn/ui components from `/frontend/src/components/ui/` before creating new ones
-
-5. **Authentication Flow**: 
-   - JWT tokens stored in localStorage
-   - UserContext provides authentication state
-   - Protected routes check authentication before rendering
-
-6. **CORS Configuration**: Backend configured to accept requests from frontend development server
-
-## Code Navigation Guide
-
-### Backend File Structure (`/backend`)
-
-#### Core Application Files
-- **`app.py`**: Main FastAPI application entry point
-  - CORS configuration
-  - Router registration
-  - Static file mounting
-  - Server startup configuration
-
-- **`models.py`**: Database models and Pydantic schemas
-  - `User` model: User authentication and profile
-  - `Transaction` model: Financial transaction records
-  - Database connection setup
-  - Pydantic validation models
-
-- **`auth.py`**: Authentication utilities
-  - JWT token generation/validation
-  - Password hashing functions
-  - User verification helpers
-  - OAuth integration helpers
-
-#### Routers Directory (`/routers`)
-- **`auth_router.py`**: Authentication endpoints
-  - `/auth/google` - Google OAuth login
-  - Token refresh endpoints
-  
-- **`users.py`**: User management endpoints
-  - `/users/signup` - User registration
-  - `/users/login` - User login
-  - `/users/profile` - Profile management
-  - `/users/upload-profile-picture` - Profile picture upload
-
-- **`transactions.py`**: Transaction CRUD endpoints
-  - `/transactions/` - List all user transactions
-  - `/transactions/create` - Create new transaction
-  - `/transactions/{id}` - Update/Delete specific transaction
-
-#### Database Migrations (`/migrations`)
-- **`alembic.ini`**: Alembic configuration
-- **`env.py`**: Migration environment setup (loads DATABASE_URL from .env)
-- **`versions/`**: Individual migration files
-
-#### Configuration Files
-- **`.env`**: Environment variables (DATABASE_URL, SECRET_KEY, etc.)
-- **`pyproject.toml`**: Python dependencies and project metadata
-- **`uv.lock`**: Locked dependency versions
-
-### Frontend File Structure (`/frontend`)
-
-#### Source Directory (`/src`)
-
-##### Core Application Files
-- **`main.tsx`**: React application entry point
-- **`App.tsx`**: Main application component with routing
-- **`config.ts`**: API configuration and constants
-
-##### Pages (`/src/pages`)
-- **`Login.tsx`**: Login/signup page with Google OAuth
-- **`Dashboard.tsx`**: Main dashboard with transaction list
-- **`AddTransaction.tsx`**: Form for adding new transactions
-- **`EditTransaction.tsx`**: Form for editing existing transactions
-
-##### Components (`/src/components`)
-- **`Header.tsx`**: Navigation header with user menu
-- **`TransactionList.tsx`**: Reusable transaction list component
-- **`ProtectedRoute.tsx`**: Route protection wrapper
-
-##### UI Components (`/src/components/ui`)
-- shadcn/ui components (Button, Card, Input, etc.)
-- Pre-styled, accessible components
-- Customizable with Tailwind classes
-
-##### Context (`/src/context`)
-- **`UserContext.tsx`**: Global authentication state
-  - User info storage
-  - Login/logout functions
-  - Token management
-
-##### Hooks (`/src/hooks`)
-- **`useTransactions.ts`**: Transaction data management
-  - Fetch transactions
-  - Add/Edit/Delete operations
-  - Optimistic updates
-
-##### Types (`/src/types`)
-- **`index.ts`**: TypeScript type definitions
-  - User interface
-  - Transaction interface
-  - API response types
-
-##### Utilities (`/src/utils`)
-- **`api.ts`**: Axios instance with interceptors
-- Helper functions for data formatting
-
-#### Configuration Files
-- **`package.json`**: Dependencies and scripts
-- **`tsconfig.json`**: TypeScript configuration
-- **`vite.config.ts`**: Vite build configuration
-- **`tailwind.config.js`**: TailwindCSS configuration
-- **`postcss.config.js`**: PostCSS configuration
-
-### Common Code Modification Scenarios
-
-#### Adding a New API Endpoint
-1. Create route handler in appropriate router file (`/backend/routers/`)
-2. Add endpoint to router
-3. Update frontend API calls (`/frontend/src/utils/api.ts`)
-4. Add TypeScript types (`/frontend/src/types/index.ts`)
-
-#### Adding a New Database Field
-1. Update model in `/backend/models.py`
-2. Create migration: `alembic revision --autogenerate -m "description"`
-3. Run migration: `alembic upgrade head`
-4. Update Pydantic schemas in `models.py`
-5. Update frontend types in `/frontend/src/types/index.ts`
-6. Update relevant components to use new field
-
-#### Adding a New Page
-1. Create component in `/frontend/src/pages/`
-2. Add route in `/frontend/src/App.tsx`
-3. Update navigation in `/frontend/src/components/Header.tsx`
-4. Wrap with ProtectedRoute if authentication required
-
-#### Modifying Authentication
-1. Backend changes in `/backend/auth.py` and `/backend/routers/auth_router.py`
-2. Update UserContext in `/frontend/src/context/UserContext.tsx`
-3. Modify login flow in `/frontend/src/pages/Login.tsx`
-
-#### Styling Changes
-1. Component-specific: Modify Tailwind classes in component
-2. Global styles: Update `/frontend/src/index.css`
-3. Theme changes: Modify `/frontend/tailwind.config.js`
-4. UI components: Customize in `/frontend/src/components/ui/`
-
-### Testing and Debugging
-
-#### Backend
-- Check logs: `python app.py` output
-- Test endpoints: Use tools like Postman or curl
-- Database queries: Connect to PostgreSQL directly
-- Migration issues: Check `alembic history` and `alembic current`
+#### Backend (.env)
+```bash
+DATABASE_URL=postgresql://expense_user:expense_password@localhost:5433/expense_tracker_db
+SECRET_KEY=your-secret-key
+GOOGLE_CLIENT_ID=your-google-client-id
+BASE_URL=http://localhost:8060
+UPLOAD_DIRECTORY=uploads
+STORAGE_TYPE=local  # or 's3'
+```
 
 #### Frontend
-- Browser DevTools: Network tab for API calls
-- React DevTools: Component state inspection
-- Console logs: Check for JavaScript errors
-- Build issues: `npm run build` for production test
+- API URL configured in `/frontend/src/config.ts`
 
-### Important Files for Different Tasks
+## Core Features Documentation
 
-#### Authentication Issues
-- `/backend/auth.py`
-- `/backend/routers/auth_router.py`
-- `/frontend/src/context/UserContext.tsx`
-- `/frontend/src/pages/Login.tsx`
+### 1. Authentication System
+- **JWT-based authentication** with localStorage token storage
+- **Google OAuth integration** for social login
+- **Protected routes** using React Router
+- **User context** for global auth state
 
-#### Database Problems
-- `/backend/models.py`
-- `/backend/migrations/env.py`
-- `/backend/.env`
+### 2. Transaction Management
+- **CRUD operations** for income/expense tracking
+- **Advanced filtering** by date, category, amount, type
+- **Bulk operations** for multiple transactions
+- **CSV import/export** functionality
+- **Pagination** support for large datasets
+- **Real-time updates** using event bus pattern
 
-#### UI/UX Changes
-- `/frontend/src/pages/*`
-- `/frontend/src/components/*`
-- `/frontend/tailwind.config.js`
+### 3. Category System
+- **Custom categories** with icons and colors
+- **Default categories** auto-created for new users
+- **Budget limits** per category
+- **Type separation** (income vs expense categories)
+- **Usage protection** (cannot delete categories in use)
 
-#### API Integration
-- `/backend/routers/*`
-- `/frontend/src/utils/api.ts`
-- `/frontend/src/config.ts`
+### 4. Multi-Currency Support
+- **150+ supported currencies**
+- **Real-time exchange rates** via API
+- **Automatic conversion** on currency change
+- **Historical rate tracking**
+- **IP-based currency detection** for new users
 
+### 5. Budget Management
+- **Monthly/Quarterly/Yearly** budget periods
+- **Category-specific budgets**
+- **Usage tracking** with percentage alerts
+- **Visual progress indicators**
+- **Budget vs actual comparisons**
 
-## Development Guidelines
+### 6. User Profile
+- **Avatar upload** with image optimization
+- **Profile customization**
+- **Currency preferences**
+- **Storage migration** support (local to S3)
 
-- MUST ALWAYS WRITE SUMMARY OF DEVELOPMENT IN A NOTES FOLDER
+### 7. Notification System
+- **Toast notifications** for user feedback
+- **Success/Error/Warning/Info** types
+- **Auto-dismiss** with configurable duration
+- **Action buttons** support
+- **Queue management** for multiple notifications
+
+## File Structure Guide
+
+### Backend Structure
+```
+backend/
+├── app.py                 # FastAPI application entry
+├── auth.py               # Authentication utilities
+├── models.py             # SQLAlchemy models & Pydantic schemas
+├── currencies.py         # Currency data and utilities
+├── currency_utils.py     # Exchange rate functions
+├── alembic.ini          # Migration configuration
+├── routers/             # API route handlers
+│   ├── auth_router.py   # Auth endpoints
+│   ├── users.py         # User management
+│   ├── transactions.py  # Transaction CRUD
+│   ├── categories.py    # Category management
+│   ├── budgets.py       # Budget tracking
+│   └── currency.py      # Currency operations
+├── storage/             # File storage abstraction
+│   ├── base.py         # Storage interface
+│   ├── local.py        # Local filesystem
+│   └── s3.py           # S3-compatible storage
+├── migrations/          # Database migrations
+│   └── versions/       # Migration files
+└── uploads/            # Local file storage
+```
+
+### Frontend Structure
+```
+frontend/
+├── src/
+│   ├── components/      # Reusable components
+│   │   ├── ui/         # shadcn/ui components
+│   │   ├── TransactionModal.tsx
+│   │   ├── TransactionTable.tsx
+│   │   ├── Sidebar.tsx
+│   │   ├── UserAvatar.tsx
+│   │   └── ...
+│   ├── pages/          # Route pages
+│   │   ├── Dashboard.tsx
+│   │   ├── Transactions.tsx
+│   │   ├── Categories.tsx
+│   │   ├── Budget.tsx
+│   │   ├── Settings.tsx
+│   │   └── ...
+│   ├── hooks/          # Custom React hooks
+│   │   ├── useTransactions.tsx
+│   │   ├── useCategories.ts
+│   │   ├── useBudgets.ts
+│   │   └── useNotifications.tsx
+│   ├── contexts/       # React contexts
+│   │   ├── UserContext.tsx
+│   │   └── NotificationContext.tsx
+│   ├── types/          # TypeScript definitions
+│   │   ├── transaction.ts
+│   │   ├── category.ts
+│   │   ├── budget.ts
+│   │   └── user.ts
+│   ├── utils/          # Utility functions
+│   │   ├── eventBus.ts
+│   │   └── formatters.ts
+│   ├── config.ts       # App configuration
+│   └── App.tsx         # Main app component
+```
+
+## Database Schema
+
+### Core Tables
+
+#### Users
+- id (Integer, Primary Key)
+- name (String, Required)
+- email (String, Unique, Required)
+- google_id (String, Unique, Optional)
+- hashed_password (String)
+- profile_picture_url (String, Optional)
+- currency (String, Default: USD)
+- currency_symbol (String, Default: $)
+
+#### Transactions
+- id (Integer, Primary Key)
+- user_id (Integer, Foreign Key)
+- amount (Float, Required)
+- original_amount (Float, Optional)
+- original_currency (String, Optional)
+- exchange_rate_to_usd (Float, Optional)
+- type (String: income/expense)
+- category (String, Required)
+- category_id (Integer, Foreign Key, Optional)
+- description (Text, Optional)
+- date (DateTime, Required)
+- payment_method (String, Optional)
+- location (String, Optional)
+- tags (Text, JSON array)
+- receipt_url (String, Optional)
+- is_recurring (Boolean, Default: False)
+- recurring_frequency (String, Optional)
+- created_at (DateTime)
+- updated_at (DateTime)
+
+#### Categories
+- id (Integer, Primary Key)
+- user_id (Integer, Foreign Key)
+- name (String, Required)
+- type (String: income/expense)
+- icon (String, Optional)
+- color (String, Optional)
+- budget_limit (Float, Optional)
+- created_at (DateTime)
+
+#### Budgets
+- id (Integer, Primary Key)
+- user_id (Integer, Foreign Key)
+- category_id (Integer, Foreign Key, Optional)
+- name (String, Required)
+- amount (Float, Required)
+- period (String: monthly/quarterly/yearly)
+- start_date (DateTime, Required)
+- end_date (DateTime, Optional)
+- is_active (Boolean, Default: True)
+- alert_threshold (Float, Default: 80.0)
+- created_at (DateTime)
+- updated_at (DateTime)
+
+#### CurrencyConversions
+- id (Integer, Primary Key)
+- user_id (Integer, Foreign Key)
+- from_currency (String, Required)
+- to_currency (String, Required)
+- exchange_rate (Float, Required)
+- status (String: pending/completed/failed)
+- created_at (DateTime)
+
+## API Endpoints Reference
+
+### Authentication
+- `POST /signup` - Register new user
+- `POST /login` - User login
+- `POST /google-login` - Google OAuth login
+
+### User Management
+- `GET /users/me` - Get current user profile
+- `PUT /users/me` - Update user profile
+- `POST /users/me/profile-picture` - Upload avatar
+- `DELETE /users/me/profile-picture` - Remove avatar
+- `GET /currencies` - Get supported currencies
+
+### Transactions
+- `GET /transactions` - List transactions (with filters)
+- `GET /transactions/paginated` - Paginated list
+- `GET /transactions/{id}` - Get single transaction
+- `POST /transactions` - Create transaction
+- `PUT /transactions/{id}` - Update transaction
+- `DELETE /transactions/{id}` - Delete transaction
+- `POST /transactions/bulk` - Bulk operations
+- `GET /transactions/statistics` - Get statistics
+- `POST /transactions/import/csv` - Import CSV
+- `GET /transactions/export/csv` - Export CSV
+- `GET /transactions/recurring` - List recurring
+
+### Categories
+- `GET /categories` - List categories (filter by type)
+- `GET /categories/{id}` - Get single category
+- `POST /categories` - Create category
+- `PUT /categories/{id}` - Update category
+- `DELETE /categories/{id}` - Delete category
+- `POST /categories/initialize-defaults` - Create defaults
+
+### Budgets
+- `GET /budgets` - List budgets
+- `GET /budgets/{id}` - Get single budget
+- `POST /budgets` - Create budget
+- `PUT /budgets/{id}` - Update budget
+- `DELETE /budgets/{id}` - Delete budget
+- `GET /budgets/usage` - Get usage statistics
+
+### Currency
+- `GET /currency/convert` - Convert amount
+- `POST /currency/change` - Change user currency
+- `GET /currency/preview` - Preview conversion impact
+
+## Common Development Tasks
+
+### Adding a New Feature
+1. Plan database changes if needed
+2. Create/update models in `backend/models.py`
+3. Generate migration: `alembic revision --autogenerate -m "description"`
+4. Apply migration: `alembic upgrade head`
+5. Create API endpoints in appropriate router
+6. Add TypeScript types in frontend
+7. Create React hook if needed
+8. Build UI components
+9. Update navigation if new page
+10. Test thoroughly
+11. Update documentation
+
+### Modifying Existing Features
+1. Locate relevant files using project structure
+2. Check for cascading effects
+3. Update backend models/endpoints
+4. Update frontend types/components
+5. Test all affected areas
+6. Update relevant documentation
+
+### Debugging Tips
+1. **Backend Issues**:
+   - Check console output from `python app.py`
+   - Verify database connection
+   - Test endpoints with Postman/curl
+   - Check migration status: `alembic current`
+
+2. **Frontend Issues**:
+   - Check browser console for errors
+   - Verify API calls in Network tab
+   - Check for TypeScript errors: `npm run build`
+   - Verify environment configuration
+
+3. **Common Problems**:
+   - CORS errors: Check backend CORS configuration
+   - Auth issues: Verify token in localStorage
+   - 404 errors: Check route definitions
+   - Database errors: Check migrations are applied
+
+## Best Practices
+
+1. **Code Organization**:
+   - Keep components small and focused
+   - Use custom hooks for data logic
+   - Maintain TypeScript types
+   - Follow existing patterns
+
+2. **State Management**:
+   - Use contexts for global state
+   - Custom hooks for feature state
+   - Local state for UI-only concerns
+
+3. **Error Handling**:
+   - Always handle API errors gracefully
+   - Show user-friendly error messages
+   - Log errors for debugging
+
+4. **Performance**:
+   - Use pagination for large lists
+   - Implement proper loading states
+   - Optimize images before upload
+   - Cache data when appropriate
+
+5. **Security**:
+   - Never commit sensitive data
+   - Validate all user inputs
+   - Use prepared statements for queries
+   - Keep dependencies updated
+
+## Important Notes
+
+1. **Always write development summaries in the notes/ folder**
+2. **Test changes thoroughly before committing**
+3. **Update types when changing API contracts**
+4. **Follow existing code patterns and styles**
+5. **Document complex logic with comments**
+6. **Keep the UI responsive and accessible**
+
+## Related Documentation
+
+- `docs/PROJECT_STRUCTURE.md` - Detailed file organization
+- `docs/API_REFERENCE.md` - Complete API documentation
+- `docs/DATABASE_SCHEMA.md` - Full database structure
+- `docs/FEATURE_GUIDE.md` - Feature-specific guides
+- `docs/MEDIA_STORAGE_GUIDE.md` - File storage configuration
+- `docs/FEATURES_ROADMAP.md` - Planned features and roadmap
